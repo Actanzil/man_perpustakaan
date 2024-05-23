@@ -33,22 +33,23 @@
 		$cek = mysqli_num_rows($login);
 
 		if ($cek > 0) {
-
 			$data = mysqli_fetch_assoc($login);
+			
+			$_SESSION['user'] = $data['username'];
+			$_SESSION['user_login'] = $data['username'];
+			$_SESSION['id'] = $data['id_user'];
+			$_SESSION['level'] = $data['level'];
 
-			if ($data['level'] == "admin") {
-				// buat session login dan username
-				$_SESSION['user'] = $data['username'];
-				$_SESSION['user_login'] = $data['username'];
-				$_SESSION['id'] = $data['id_user'];
-				$_SESSION['level'] = "admin";
-				header("location:stock");
+			if ($data['level'] == "Admin") {
+				header("location: stock");
+			} elseif ($data['level'] == "Superadmin") {
+				header("location: stock");
 			} else {
 				$notification = "Username atau Password salah!";
 			}
 		} else {
-            $notification = "Username atau Password salah!";
-        }
+			$notification = "Username atau Password salah!";
+		}
 	}
 
 

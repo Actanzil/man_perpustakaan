@@ -104,14 +104,17 @@
                             <span class="sidebar-text">Data Keluar</span>
                         </a>
                     </li>
-                    <li class="nav-item ">
-                        <a href="page_user.php" class="nav-link">
-                            <span class="sidebar-icon">
-                                <i class="bi bi-people-fill"></i>
-                            </span>
-                            <span class="sidebar-text">Data User</span>
-                        </a>
-                    </li>
+                    <?php if ($_SESSION['level'] == "Superadmin") { ?>
+                        <li class="nav-item ">
+                            <a href="page_user.php" class="nav-link">
+                                <span class="sidebar-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </span>
+                                <span class="sidebar-text">Data User</span>
+                            </a>
+                        </li>
+                    <?php } ?>
+                    
                     <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
                     <li class="nav-item ">
                         <a href="logout.php" class="nav-link">

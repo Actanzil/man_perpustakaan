@@ -2,6 +2,13 @@
     include '../dbconnect.php';
     include 'cek.php';
 
+    // Pastikan hanya Superadmin yang dapat mengakses halaman ini
+    if ($_SESSION['level'] != "Superadmin") {
+        // Redirect pengguna kembali ke halaman dashboard atau halaman lain yang sesuai
+        header("location: index.php?pesan=noaccess");
+        exit(); // Penting untuk menghentikan eksekusi skrip setelah melakukan redirect
+    }
+
     $notification = "";
 
     if(isset($_POST['update'])){
