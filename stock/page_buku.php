@@ -16,6 +16,8 @@
     $notification = "";
 
     if(isset($_POST['update'])){
+        include '../dbconnect.php';
+    
         $id_buku = $_POST['id_buku'];
         $kd_buku = $_POST['kd_buku'];
         $judul = $_POST['judul'];
@@ -23,34 +25,86 @@
         $penerbit = $_POST['penerbit'];
         $tahun = $_POST['tahun'];
         $tags = $_POST['tags']; // Ambil array dari tag yang dipilih
-
-        // Perbarui data buku
-        $updatedata = mysqli_query($conn,"  UPDATE tb_buku 
-                                            SET kode_buku= '$kd_buku', judul_buku='$judul', penulis_buku='$penulis', penerbit_buku='$penerbit', tahun_terbit='$tahun' 
-                                            WHERE id_buku='$id_buku'");
-
+        
+        // Handle file upload
+        $gambar = $_FILES['gambar']['name'];
+        $lokasi_file = $_FILES['gambar']['tmp_name'];
+        $direktori = 'assets/gambar-buku/'.$gambar;
+    
+        // Default query
+        $query = "UPDATE tb_buku SET kode_buku='$kd_buku', judul_buku='$judul', penulis_buku='$penulis', penerbit_buku='$penerbit', tahun_terbit='$tahun'";
+        
+        // Jika file gambar diunggah, hapus gambar lama dan tambahkan gambar baru ke direktori
+        if (!empty($gambar)) {
+            // Ambil nama gambar lama
+            $query_gambar_lama = mysqli_query($conn, "SELECT gambar FROM tb_buku WHERE id_buku='$id_buku'");
+            $data_gambar_lama = mysqli_fetch_assoc($query_gambar_lama);
+            $nama_gambar_lama = $data_gambar_lama['gambar'];
+    
+            // Hapus gambar lama dari direktori jika ada
+            if (!empty($nama_gambar_lama) && file_exists('assets/gambar-buku/'.$nama_gambar_lama)) {
+                unlink('assets/gambar-buku/'.$nama_gambar_lama);
+            }
+    
+            // Pindahkan gambar baru ke direktori
+            if (move_uploaded_file($lokasi_file, $direktori)) {
+                $query .= ", gambar='$gambar'";
+            } else {
+                $caption = "Mohon maaf !!!";
+                $notification = "Gagal mengunggah gambar!";
+                $alertType = "danger";
+                $notification = [
+                    'type' => $alertType,
+                    'caption' => $caption,
+                    'message' => $notification
+                ];
+                $encodedNotification = urlencode(json_encode($notification));
+                header("Location: page_buku.php?notification=$encodedNotification");
+                exit();
+            }
+        }
+        
+        // Lengkapi query dengan klausa WHERE
+        $query .= " WHERE id_buku='$id_buku'";
+        
+        // Jalankan query
+        $updatedata = mysqli_query($conn, $query);
+    
         // Hapus semua tag buku lama
         $delete_old_tags = mysqli_query($conn, "DELETE FROM tb_tag_buku WHERE id_buku='$id_buku'");
-
+    
         // Tambahkan tag baru
         foreach ($tags as $tag_id) {
             $add_tag = mysqli_query($conn, "INSERT INTO tb_tag_buku (id_buku, id_tag) VALUES ('$id_buku', '$tag_id')");
         }
-        switch ($updatedata && $delete_old_tags && $add_tag) {
-            case true:
-                $caption = "Selamat !!!";
-                $notification = "Data berhasil diperbarui!";
-                $alertType = "success";
-                break;
-            default:
-                $caption = "Mohon maaf !!!";
-                $notification = "Gagal memperbarui data!";
-                $alertType = "danger";
+    
+        // Cek hasil query
+        if ($updatedata && $delete_old_tags && $add_tag) {
+            $caption = "Selamat !!!";
+            $notification = "Data berhasil diperbarui!";
+            $alertType = "success";
+        } else {
+            $caption = "Mohon maaf !!!";
+            $notification = "Gagal memperbarui data!";
+            $alertType = "danger";
         }
     };
 
     if(isset($_POST['hapus'])){
         $id_buku = $_POST['id_buku'];
+
+        // Ambil nama gambar buku dari basis data
+        $query_gambar = mysqli_query($conn, "SELECT gambar FROM tb_buku WHERE id_buku='$id_buku'");
+        $data_gambar = mysqli_fetch_assoc($query_gambar);
+        $nama_gambar = $data_gambar['gambar'];
+
+        // Hapus gambar dari direktori jika gambar ada
+        if(!empty($nama_gambar)) {
+            $path_to_file = 'assets/gambar-buku/' . $nama_gambar;
+            if(file_exists($path_to_file)) {
+                unlink($path_to_file);
+            }
+        }
 
         $delete = mysqli_query($conn,"DELETE FROM tb_buku where id_buku='$id_buku'");
         //hapus juga semua data buku ini di tabel keluar-masuk
@@ -290,8 +344,14 @@
                                 <h2 class="h6 modal-title">Formulir Tambah Data Buku</h2>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form action="konfirmasi_tambah_buku.php" method="POST">
+                            <form action="konfirmasi_tambah_buku.php" method="POST" enctype="multipart/form-data">
                                 <div class="modal-body">
+                                    <div class="mb-3 row">
+                                        <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" type="file" id="formFile" name="gambar" required>
+                                        </div>
+                                    </div>
                                     <div class="mb-3 row">
                                         <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
                                         <div class="col-sm-10">
@@ -412,234 +472,256 @@
             </div>
             <!-- End Kolom Pencarian -->
             
-            <div class="card card-body border-0 shadow table-wrapper table-responsive">
-                <table class="table table-centered table-nowrap mb-0 rounded">
-                    <thead class="thead-light">
-                        <tr>
-                            <th class="border-0 rounded-start">#</th>
-                            <th class="border-0">Kode</th>
-                            <th class="border-0">Judul</th>
-                            <th class="border-0">Penerbit</th>
-                            <th class="border-0">Penulis</th>
-                            <th class="border-0">Tahun</th>
-                            <th class="border-0">Persediaan</th>
-                            <th class="border-0 rounded-end"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Item -->
-                        <?php
-                            // Limit untuk membatasi jumlah data pada satu halaman
-                            $batas = 5;
-                            if(!isset($_GET['halaman'])){
-                                $posisi = 0;
-                                $halaman = 1;
-                            }else{
-                                $halaman = $_GET['halaman'];
-                                $posisi = ($halaman-1) * $batas;
-                            }
+            <div class="task-wrapper border bg-white shadow border-0 rounded">
+                <!-- Item -->
+                <?php
+                    // Limit untuk membatasi jumlah data pada satu halaman
+                    $batas = 5;
+                    if(!isset($_GET['halaman'])){
+                        $posisi = 0;
+                        $halaman = 1;
+                    }else{
+                        $halaman = $_GET['halaman'];
+                        $posisi = ($halaman-1) * $batas;
+                    }
 
-                            // Inisialisasi katakunci pencarian
-                            $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
-                            
-                            // Query untuk menampilkan semua data pada tabel tb_buku
-                            $sql = "SELECT * FROM tb_buku";
-                            
-                            // Logika untuk pencarian
-                            if (!empty($katakunci)) {
-                                $sql .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
-                            }
-                            
-                            // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                            $sql .= " ORDER BY judul_buku ASC LIMIT $posisi, $batas";
+                    // Inisialisasi katakunci pencarian
+                    $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
+                    
+                    // Query untuk menampilkan semua data pada tabel tb_buku
+                    $sql = "SELECT * FROM tb_buku";
+                    
+                    // Logika untuk pencarian
+                    if (!empty($katakunci)) {
+                        $sql .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                    }
+                    
+                    // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
+                    $sql .= " ORDER BY judul_buku ASC LIMIT $posisi, $batas";
 
-                            $brgs = mysqli_query($conn, $sql);
-                            $no = 1;
-                            while($p=mysqli_fetch_array($brgs)){
-                                $idb = $p['id_buku'];
-                            ?>
-                        <tr>
-                            <td><a href="#" class="text-primary fw-bold"><?= $no++ ?></a> </td>
-                            <td><?= $p['kode_buku'] ?></td>
-                            <td><?= $p['judul_buku'] ?></td>
-                            <td><?= $p['penulis_buku'] ?></td>
-                            <td><?= $p['penerbit_buku'] ?></td>
-                            <td><?= $p['tahun_terbit'] ?></td>
-                            <td><?= $p['stock'] ?></td>
-                            <td>
-                                <div class="dropdown ms-3">
-                                    <button type="button" class="btn btn-sm fs-6 px-1 py-0 dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg></button>
+                    $brgs = mysqli_query($conn, $sql);
+                    $no = 1;
+                    while($p=mysqli_fetch_array($brgs)){
+                        $idb = $p['id_buku'];
+                    ?>
+                    <div class="card hover-state border-bottom rounded-0 rounded-top py-3">
+                        <div class="card-body d-sm-flex align-items-center flex-wrap flex-lg-nowrap py-0">
+                            <div class="col-1 text-left text-sm-center mb-2 mb-sm-0">
+                                <div class="image-book me-sm-4">
+                                    <img src="assets/gambar-buku/<?= $p['gambar'] ?>" alt="">
+                                </div>    
+                            </div> 
+                            <div class="col-11 col-lg-8 px-0 mb-4 mb-md-0">
+                                <div class="mb-2">
+                                    <h3 class="h5"><?= $p['kode_buku'] ?> - <?= $p['judul_buku'] ?></h3>
+                                    <div class="d-block d-sm-flex">
+                                        <div>
+                                            <h4 class="h6 fw-normal text-gray mb-3 mb-sm-0"><i class="bi bi-person-lines-fill text-gray-500 me-1"></i> <?= $p['penulis_buku'] ?> - <?= $p['tahun_terbit'] ?></h4>
+                                        </div>
+                                        <div class="ms-sm-3">
+                                            <h4 class="h6 fw-normal text-danger mb-3 mb-sm-0"><i class="bi bi-bookmark-heart-fill text-danger-500 me-1"></i> <b>5</b></h4>
+                                        </div>
+                                        <div class="ms-sm-3">
+                                            <span class="badge super-badge bg-success"><?= $p['penerbit_buku'] ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="fw-normal text-gray">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi pulvinar feugiat consequat. Duis lacus nibh, sagittis id varius vel, aliquet non augue.</span>
+                                </div>
+                            </div>
+                            <div class="col-10 col-sm-2 col-lg-2 col-xl-2 d-none d-lg-block d-xl-inline-flex align-items-center ms-lg-auto text-right justify-content-end px-md-0">
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-dark dropdown-toggle dropdown-toggle-split m-0 p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg><span class="visually-hidden">Toggle Dropdown</span></button>
                                     <div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#edit<?= $idb; ?>"><svg class="dropdown-icon text-gray-400 me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg> Edit Data</a>
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>"><svg class="dropdown-icon text-danger me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> Hapus Data</a>
+                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#edit<?= $idb; ?>">
+                                            <svg class="dropdown-icon text-gray-400 me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg> 
+                                            Edit Data
+                                        </a>
+                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>">
+                                            <svg class="dropdown-icon text-danger me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> 
+                                            Hapus Data
+                                        </a>
                                     </div>
                                 </div>
-                            </td>
-
-                            <!-- Modal Edit -->
-                            <div class="modal fade" id="edit<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
-                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Edit Data Buku</h2>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <!-- Modal Edit -->
+                                <div class="modal fade" id="edit<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
+                                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h2 class="h6 modal-title">Formulir Edit Data Buku</h2>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="" method="POST" enctype="multipart/form-data">
+                                                <div class="modal-body">
+                                                    <div class="mb-3 row">
+                                                        <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
+                                                        <div class="col-sm-10 d-flex align-items-center">
+                                                            <div class="me-3">
+                                                                <img class="rounded avatar-xl" src="assets/gambar-buku/<?= $p['gambar'] ?>" alt="Gambar Buku <?php echo $p['judul_buku'] ?>">
+                                                            </div>
+                                                            <div class="">
+                                                                <div class="d-flex justify-content-xl-center ms-xl-3">
+                                                                    <div class="d-flex">
+                                                                        <input class="form-control" type="file" id="formFile" name="gambar"><br>
+                                                                        <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah gambar</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>     
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="text" class="form-control" id="kd_buku" name="kd_buku" value="<?php echo $p['kode_buku'] ?>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="text" class="form-control" id="judul" name="judul" value="<?php echo $p['judul_buku'] ?>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="text" class="form-control" id="penulis" name="penulis" value="<?php echo $p['penulis_buku'] ?>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
+                                                        <div class="col-sm-10">
+                                                            <select class="form-select" aria-label="Default select example" name="penerbit" required>
+                                                                <option value="Gramedia" <?php if ($p['penerbit_buku']=="Gramedia") { ?> selected <?php } ?>>Gramedia</option>
+                                                                <option value="Togamas" <?php if ($p['penerbit_buku']=="Togamas") { ?> selected <?php } ?>>Togamas</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="text" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3 row">
+                                                        <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
+                                                        <div class="col-sm-10">
+                                                            <select name="tags[]" id="tags2" multiple>
+                                                                <?php
+                                                                    // Query untuk mendapatkan detail buku
+                                                                    $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
+                                                                    $query_buku = mysqli_query($conn, $sql_buku);
+                                                                    $p = mysqli_fetch_assoc($query_buku);
+                    
+                                                                    // Query untuk mendapatkan tag yang terkait dengan buku ini
+                                                                    $sql_tags_selected = "SELECT id_tag FROM tb_tag_buku WHERE id_buku = '$idb'";
+                                                                    $query_tags_selected = mysqli_query($conn, $sql_tags_selected);
+                                                                    $selected_tags = [];
+                                                                    while ($row = mysqli_fetch_assoc($query_tags_selected)) {
+                                                                        $selected_tags[] = $row['id_tag'];
+                                                                    }
+                                                                    $sql_tg = "SELECT `id_tag`, `nama_tag` FROM `tb_tag` ORDER BY `nama_tag`";
+                                                                    $query_tg = mysqli_query($conn, $sql_tg);
+                                                                    while($data_tg = mysqli_fetch_row($query_tg)){
+                                                                        $id_tag = $data_tg[0];
+                                                                        $nama = $data_tg[1];
+                                                                        $selected = in_array($id_tag, $selected_tags) ? 'selected' : ''; // Memeriksa apakah tag ini sudah dipilih sebelumnya
+                                                                ?>
+                                                                <option value="<?= $id_tag; ?>" <?= $selected; ?>><?= $nama; ?></option>
+                                                                <?php } ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3 row">
+                                                        <label for="stock" class="col-sm-2 col-form-label">Stock</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="number" class="form-control" id="stock" value="<?php echo $p['stock'] ?>" disabled>
+                                                            <input type="hidden" name="id_buku" value="<?= $idb; ?>">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                                    <button type="submit" class="btn btn-secondary" name="update">Ubah Data</button>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <form action="" method="POST">
-                                            
-                                            <div class="modal-body">
-                                                <div class="mb-3 row">
-                                                    <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="kd_buku" name="kd_buku" value="<?php echo $p['kode_buku'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="judul" name="judul" value="<?php echo $p['judul_buku'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="penulis" name="penulis" value="<?php echo $p['penulis_buku'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <select class="form-select" aria-label="Default select example" name="penerbit" required>
-                                                            <option value="Gramedia" <?php if ($p['penerbit_buku']=="Gramedia") { ?> selected <?php } ?>>Gramedia</option>
-                                                            <option value="Togamas" <?php if ($p['penerbit_buku']=="Togamas") { ?> selected <?php } ?>>Togamas</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <select name="tags[]" id="tags2" multiple>
-                                                            <?php
-                                                                // Query untuk mendapatkan detail buku
-                                                                $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
-                                                                $query_buku = mysqli_query($conn, $sql_buku);
-                                                                $p = mysqli_fetch_assoc($query_buku);
-                
-                                                                // Query untuk mendapatkan tag yang terkait dengan buku ini
-                                                                $sql_tags_selected = "SELECT id_tag FROM tb_tag_buku WHERE id_buku = '$idb'";
-                                                                $query_tags_selected = mysqli_query($conn, $sql_tags_selected);
-                                                                $selected_tags = [];
-                                                                while ($row = mysqli_fetch_assoc($query_tags_selected)) {
-                                                                    $selected_tags[] = $row['id_tag'];
-                                                                }
-                                                                $sql_tg = "SELECT `id_tag`, `nama_tag` FROM `tb_tag` ORDER BY `nama_tag`";
-                                                                $query_tg = mysqli_query($conn, $sql_tg);
-                                                                while($data_tg = mysqli_fetch_row($query_tg)){
-                                                                    $id_tag = $data_tg[0];
-                                                                    $nama = $data_tg[1];
-                                                                    $selected = in_array($id_tag, $selected_tags) ? 'selected' : ''; // Memeriksa apakah tag ini sudah dipilih sebelumnya
-                                                            ?>
-                                                            <option value="<?= $id_tag; ?>" <?= $selected; ?>><?= $nama; ?></option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="mb-3 row">
-                                                    <label for="stock" class="col-sm-2 col-form-label">Stock</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="number" class="form-control" id="stock" value="<?php echo $p['stock'] ?>" disabled>
-                                                        <input type="hidden" name="id_buku" value="<?= $idb; ?>">
-                                                    </div>
-                                                </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Hapus -->
+                                <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h2 class="h6 modal-title">Formulir Hapus Data Buku</h2>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                <button type="submit" class="btn btn-secondary" name="update">Ubah Data</button>
-                                            </div>
-                                        </form>
+                                            <form action="" method="POST">
+                                                <div class="modal-body">
+                                                    <p>Judul Buku : <?php echo $p['judul_buku']?></p>
+                                                    <p>Apakah Anda yakin ingin menghapus buku ini dari daftar buku?</p>
+                                                    <input type="hidden" name="id_buku" value="<?=$idb;?>">
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                                    <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Modal Hapus -->
-                            <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Hapus Data Buku</h2>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form action="" method="POST">
-                                            <div class="modal-body">
-                                                <p>Judul Buku : <?php echo $p['judul_buku']?></p>
-                                                <p>Apakah Anda yakin ingin menghapus buku ini dari daftar buku?</p>
-                                                <input type="hidden" name="id_buku" value="<?=$idb;?>">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
-
-                
-
-                <!-- Pagination -->
-                <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row align-items-center justify-content-between">
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination mb-0">
-                            <?php
-                                //hitung jumlah semua data
-                                $sql_jum = "SELECT * FROM tb_buku";
-                                if (!empty($katakunci)){
-                                    $sql_jum .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
-                                }
-                                $sql_jum .= " ORDER BY judul_buku ASC";
-                                $query_jum = mysqli_query($conn,$sql_jum);
-                                $jum_data = mysqli_num_rows($query_jum);
-                                $jum_halaman = ceil($jum_data/$batas);
-                                
-                                if($jum_halaman==0){
-                                    //tidak ada halaman
-                                } else if($jum_halaman==1){
-                                    echo "<li class='page-item active'><a class='page-link'>1</a></li>";
-                                } else {
-                                    $sebelum = $halaman-1;
-                                    $setelah = $halaman+1;
-                                    if($halaman!=1){
-                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
+                        </div>
+                    </div>
+                <?php } ?>
+                <div class="row p-4">
+                    <!-- Pagination -->
+                    <div class="col-7 mt-1">Showing <b>5</b> out of <b>25</b> entries</div>
+                    <div class="col-5">
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination mb-0 float-end">
+                                <?php
+                                    //hitung jumlah semua data
+                                    $sql_jum = "SELECT * FROM tb_buku";
+                                    if (!empty($katakunci)){
+                                        $sql_jum .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                                     }
-                                    for($i=1; $i<=$jum_halaman; $i++){
-                                        if ($i > $halaman - 5 and $i < $halaman + 5 ) {
-                                            if($i!=$halaman){
-                                                echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$i'>$i</a></li>";
-                                            } else {
-                                                echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
+                                    $sql_jum .= " ORDER BY judul_buku ASC";
+                                    $query_jum = mysqli_query($conn,$sql_jum);
+                                    $jum_data = mysqli_num_rows($query_jum);
+                                    $jum_halaman = ceil($jum_data/$batas);
+                                    
+                                    if($jum_halaman==0){
+                                        //tidak ada halaman
+                                    } else if($jum_halaman==1){
+                                        echo "<li class='page-item active'><a class='page-link'>1</a></li>";
+                                    } else {
+                                        $sebelum = $halaman-1;
+                                        $setelah = $halaman+1;
+                                        if($halaman!=1){
+                                            echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
                                         }
+                                        for($i=1; $i<=$jum_halaman; $i++){
+                                            if ($i > $halaman - 5 and $i < $halaman + 5 ) {
+                                                if($i!=$halaman){
+                                                    echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$i'>$i</a></li>";
+                                                } else {
+                                                    echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
+                                            }
+                                            }
+                                        }
+                                        if($halaman!=$jum_halaman){
+                                            echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
                                         }
                                     }
-                                    if($halaman!=$jum_halaman){
-                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
-                                    }
-                                }
-                            ?>
-                        </ul>
-                    </nav>
+                                ?>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
-            
         </main>
 
         <!-- Script -->

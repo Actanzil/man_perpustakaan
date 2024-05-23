@@ -11,7 +11,7 @@
 
     $id_user = $_SESSION['id'];
     //get profil
-    $sql_us = " SELECT  `foto`, `nama`
+    $sql_us = " SELECT `foto`, `nama`
                 FROM `user`
                 WHERE `id_user` = '$id_user' "; 
     $query_us = mysqli_query($conn,$sql_us);
