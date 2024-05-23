@@ -181,23 +181,21 @@
                                         <tr>
                                             <th class="border-bottom" scope="col">Kode Buku</th>
                                             <th class="border-bottom" scope="col">Judul Buku</th>
-                                            <th class="border-bottom" scope="col">Penulis</th>
-                                            <th class="border-bottom" scope="col">Penerbit</th>
                                             <th class="border-bottom" scope="col">Transaksi</th>
                                             <th class="border-bottom" scope="col">Kategori</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                                $query_brg = (" SELECT id_buku, judul_buku, tanggal_transaksi, kategori 
-                                                                FROM (  SELECT b.id_buku, b.judul_buku, bm.tanggal as tanggal_transaksi, 'Masuk' as kategori
+                                                $query_brg = (" SELECT id_buku, kode_buku, judul_buku, tanggal_transaksi, kategori 
+                                                                FROM (  SELECT b.id_buku, b.kode_buku, b.judul_buku, bm.tanggal as tanggal_transaksi, 'Masuk' as kategori
                                                                         FROM tb_buku b
                                                                         LEFT JOIN tb_buku_masuk bm ON b.id_buku = bm.id_buku
                                                                         WHERE bm.id_buku IS NOT NULL
                                                     
                                                                         UNION
                                                     
-                                                                        SELECT b.id_buku, b.judul_buku, bk.tanggal as tanggal_transaksi, 'Keluar' as kategori
+                                                                        SELECT b.id_buku, b.kode_buku, b.judul_buku, bk.tanggal as tanggal_transaksi, 'Keluar' as kategori
                                                                         FROM tb_buku b
                                                                         LEFT JOIN tb_buku_keluar bk ON b.id_buku = bk.id_buku
                                                                         WHERE bk.id_buku IS NOT NULL
@@ -208,8 +206,8 @@
                                                     $tanggal_format = date("d F Y", strtotime($b['tanggal_transaksi']));
                                                 ?>
                                             <tr>
-                                                <th class="text-gray-900" scope="row"><?php echo $b['id_buku'] ?></th>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['judul'] ?></td>
+                                                <th class="text-gray-900" scope="row"><?php echo $b['kode_buku'] ?></th>
+                                                <td class="fw-bolder text-gray-500"><?php echo $b['judul_buku'] ?></td>
                                             </tr>
                                             <?php } ?>
                                         </tbody>
