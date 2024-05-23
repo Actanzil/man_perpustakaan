@@ -3,6 +3,17 @@
     include 'cek.php';
     include 'fungsi.php';
 
+    $id_user = $_SESSION['id'];
+    //get profil
+    $sql_us = " SELECT  `foto`, `nama`
+                FROM `user`
+                WHERE `id_user` = '$id_user' "; 
+    $query_us = mysqli_query($conn,$sql_us);
+    while($data_us = mysqli_fetch_row($query_us)){
+      $foto = $data_us[0];
+      $nama = $data_us[1];
+    }
+
     if (isset($_POST['update'])) {
         $id_keluar = $_POST['id_keluar']; //id data keluar
         $id_buku = $_POST['id_buku']; //id buku
@@ -143,10 +154,10 @@
                 <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
                     <div class="d-flex align-items-center">
                         <div class="avatar-lg me-4">
-                            <img src="../assets/img/team/profile-picture-3.jpg" class="card-img-top rounded-circle border-white" alt="Bonnie Green">
+                            <img src="assets/foto-user/<?= $foto; ?>" class="card-img-top rounded-circle border-white" alt="Bonnie Green">
                         </div>
                         <div class="d-block">
-                        <h2 class="h5 mb-3">Hi, <?=$_SESSION['user'];?></h2>
+                        <h2 class="h5 mb-3">Hi, <?=$nama;?></h2>
                         <a href="pages/examples/sign-in.html" class="btn btn-secondary btn-sm d-inline-flex align-items-center">         
                             Keluar
                         </a>
@@ -253,9 +264,9 @@
                             <li class="nav-item ms-lg-3">
                                 <a class="nav-link pt-1 px-0" role="button">
                                     <div class="media d-flex align-items-center">
-                                        <img class="avatar rounded-circle" alt="Image placeholder" src="../assets/img/team/profile-picture-3.jpg">
+                                        <img class="avatar rounded-circle" alt="Image placeholder" src="assets/foto-user/<?= $foto; ?>">
                                         <div class="media-body ms-2 text-dark align-items-center d-none d-lg-block">
-                                            <span class="mb-0 font-small fw-bold text-gray-900"><?=$_SESSION['user'];?></span>
+                                            <span class="mb-0 font-small fw-bold text-gray-900"><?= $nama; ?></span>
                                         </div>
                                     </div>
                                 </a>

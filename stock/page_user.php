@@ -9,6 +9,17 @@
         exit(); // Penting untuk menghentikan eksekusi skrip setelah melakukan redirect
     }
 
+    $id_user = $_SESSION['id'];
+    //get profil
+    $sql_us = " SELECT  `foto`, `nama`
+                FROM `user`
+                WHERE `id_user` = '$id_user' "; 
+    $query_us = mysqli_query($conn,$sql_us);
+    while($data_us = mysqli_fetch_row($query_us)){
+      $foto = $data_us[0];
+      $nama = $data_us[1];
+    }
+
     $notification = "";
 
     if(isset($_POST['update'])){
@@ -35,8 +46,19 @@
             $query .= ", password='$pass'";
         }
     
-        // Jika file foto diunggah, tambahkan ke query
+        // Jika file foto diunggah, hapus foto lama dan tambahkan foto baru ke direktori
         if (!empty($foto)) {
+            // Ambil nama foto lama
+            $query_foto_lama = mysqli_query($conn, "SELECT foto FROM user WHERE id_user='$id_user'");
+            $data_foto_lama = mysqli_fetch_assoc($query_foto_lama);
+            $nama_foto_lama = $data_foto_lama['foto'];
+    
+            // Hapus foto lama dari direktori jika ada
+            if (!empty($nama_foto_lama) && file_exists('assets/foto-user/'.$nama_foto_lama)) {
+                unlink('assets/foto-user/'.$nama_foto_lama);
+            }
+    
+            // Pindahkan foto baru ke direktori
             if (move_uploaded_file($lokasi_file, $direktori)) {
                 $query .= ", foto='$foto'";
             } else {
@@ -71,9 +93,23 @@
             $alertType = "danger";
         }
     };
+    
 
     if(isset($_POST['hapus'])){
         $id_user = $_POST['id_user'];
+
+        // Ambil nama foto pengguna dari basis data
+        $query_foto = mysqli_query($conn, "SELECT foto FROM user WHERE id_user='$id_user'");
+        $data_foto = mysqli_fetch_assoc($query_foto);
+        $nama_foto = $data_foto['foto'];
+
+        // Hapus foto dari direktori jika foto ada
+        if(!empty($nama_foto)) {
+            $path_to_file = 'assets/foto-user/' . $nama_foto;
+            if(file_exists($path_to_file)) {
+                unlink($path_to_file);
+            }
+        }
 
         $delete = mysqli_query($conn,"DELETE FROM user where id_user='$id_user'");
         //hapus juga semua data user ini di tabel keluar-masuk
@@ -137,10 +173,10 @@
                 <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
                     <div class="d-flex align-items-center">
                         <div class="avatar-lg me-4">
-                            <img src="../assets/img/team/profile-picture-3.jpg" class="card-img-top rounded-circle border-white" alt="Bonnie Green">
+                            <img src="assets/foto-user/<? $foto; ?>" class="card-img-top rounded-circle border-white" alt="Bonnie Green">
                         </div>
                         <div class="d-block">
-                        <h2 class="h5 mb-3">Hi, <?=$_SESSION['user'];?></h2>
+                        <h2 class="h5 mb-3">Hi, <?= $nama; ?></h2>
                         <a href="pages/examples/sign-in.html" class="btn btn-secondary btn-sm d-inline-flex align-items-center">         
                             Keluar
                         </a>
@@ -197,7 +233,7 @@
                         </a>
                     </li>
                     <?php if ($_SESSION['level'] == "Superadmin") { ?>
-                        <li class="nav-item ">
+                        <li class="nav-item active">
                             <a href="page_user.php" class="nav-link">
                                 <span class="sidebar-icon">
                                     <i class="bi bi-people-fill"></i>
@@ -247,9 +283,9 @@
                             <li class="nav-item ms-lg-3">
                                 <a class="nav-link pt-1 px-0" role="button">
                                     <div class="media d-flex align-items-center">
-                                        <img class="avatar rounded-circle" alt="Image placeholder" src="../assets/img/team/profile-picture-3.jpg">
+                                        <img class="avatar rounded-circle" alt="Image placeholder" src="assets/foto-user/<?= $foto; ?>">
                                         <div class="media-body ms-2 text-dark align-items-center d-none d-lg-block">
-                                            <span class="mb-0 font-small fw-bold text-gray-900"><?=$_SESSION['user'];?></span>
+                                            <span class="mb-0 font-small fw-bold text-gray-900"><?=$nama;?></span>
                                         </div>
                                     </div>
                                 </a>
@@ -419,8 +455,11 @@
                             // Inisialisasi katakunci pencarian
                             $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                             
-                            // Query untuk menampilkan semua data pada tabel user
-                            $sql = "SELECT * FROM user";
+                            // Ambil id_user dari session
+                            $id_user_login = $_SESSION['id'];
+
+                            // Query untuk menampilkan semua data pada tabel user kecuali user yang sedang login
+                            $sql = "SELECT * FROM user WHERE id_user != $id_user_login";
                             
                             // Logika untuk pencarian
                             if (!empty($katakunci)) {
