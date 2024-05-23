@@ -76,10 +76,12 @@
         $id_user = $_POST['id_user'];
 
         $delete = mysqli_query($conn,"DELETE FROM user where id_user='$id_user'");
-        
+        //hapus juga semua data user ini di tabel keluar-masuk
+        $deltabelkeluar = mysqli_query($conn,"DELETE FROM tb_buku_keluar WHERE id_user = '$id_user'");
+        $deltabelmasuk = mysqli_query($conn,"DELETE FROM tb_buku_masuk WHERE id_user = '$id_user'");
         
         //cek apakah berhasil
-        switch ($delete) {
+        switch ($delete && $deltabelkeluar && $deltabelmasuk) {
             case true:
                 $caption = "Peringatan !!!";
                 $notification = "Data berhasil dihapus!";
