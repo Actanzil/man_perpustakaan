@@ -1,15 +1,15 @@
 <?php
 
   include '../dbconnect.php';
-  $nama = $_POST['nama'];
-  $jenis = $_POST['jenis'];
-  $ukuran = $_POST['ukuran'];
-  $merk = $_POST['merk'];
-  $satuan = $_POST['satuan'];
-  $lokasi = $_POST['lokasi'];
+  $kd_buku = $_POST['kd_buku'];
+  $judul = $_POST['judul'];
+  $penulis = $_POST['penulis'];
+  $penerbit = $_POST['penerbit'];
+  $tahun = $_POST['tahun'];
   $stock = $_POST['stock'];
       
-  $query = mysqli_query($conn,"INSERT INTO tb_barang (nama, jenis, merk, ukuran, satuan, lokasi, stock)VALUES('$nama','$jenis','$merk','$ukuran','$satuan','$lokasi','$stock')");
+  $query = mysqli_query($conn," INSERT INTO tb_buku (kode_buku, judul_buku, penulis_buku, penerbit_buku, tahun_terbit, stock)
+                                VALUES('$kd_buku','$judul','$penulis','$penerbit','$tahun','$stock')");
   
   if ($query){
     // notifikasi
@@ -32,6 +32,6 @@
   // Convert array ke JSON dan encode untuk ditransfer melalui URL
   $encodedNotification = urlencode(json_encode($notification));
 
-  header("Location: page_barang.php?notification=$encodedNotification");
+  header("Location: page_buku.php?notification=$encodedNotification");
   exit();
 ?>

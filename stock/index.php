@@ -8,9 +8,9 @@
     <head> 
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <!-- Primary Meta Tags -->
-        <title>Pupuk - Admin</title>
+        <title>Perpustakaan - Admin</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="title" content="Pupuk - Administrasi">
+        <meta name="title" content="Perpustakaan - Administrasi">
 
         <!-- Favicon -->
         <link rel="apple-touch-icon" sizes="120x120" href="../assets/img/favicon/apple-touch-icon.png">
@@ -81,11 +81,11 @@
                     </li>
                     
                     <li class="nav-item ">
-                        <a href="page_barang.php" class="nav-link">
+                        <a href="page_buku.php" class="nav-link">
                             <span class="sidebar-icon">
                                 <i class="bi bi-basket-fill"></i>
                             </span>
-                            <span class="sidebar-text">Persediaan Barang</span>
+                            <span class="sidebar-text">Daftar Buku</span>
                         </a>
                     </li>
                     <li class="nav-item ">
@@ -171,7 +171,7 @@
                                 <div class="card-header">
                                     <div class="row align-items-center">
                                         <div class="col">
-                                            <h2 class="fs-5 fw-bold mb-0">Data Transaksi Barang</h2>
+                                            <h2 class="fs-5 fw-bold mb-0">Data Transaksi Buku</h2>
                                         </div>
                                     </div>
                                 </div>
@@ -179,41 +179,37 @@
                                     <table class="table align-items-center table-flush">
                                         <thead class="thead-light">
                                         <tr>
-                                            <th class="border-bottom" scope="col">ID Barang</th>
-                                            <th class="border-bottom" scope="col">Nama Barang</th>
-                                            <th class="border-bottom" scope="col">Jenis</th>
-                                            <th class="border-bottom" scope="col">Merk</th>
+                                            <th class="border-bottom" scope="col">Kode Buku</th>
+                                            <th class="border-bottom" scope="col">Judul Buku</th>
+                                            <th class="border-bottom" scope="col">Penulis</th>
+                                            <th class="border-bottom" scope="col">Penerbit</th>
                                             <th class="border-bottom" scope="col">Transaksi</th>
                                             <th class="border-bottom" scope="col">Kategori</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                                $query_brg = (" SELECT id_barang, nama, jenis, merk, tanggal_transaksi, kategori
-                                                                FROM (  SELECT b.id_barang, b.nama, b.jenis, b.merk, bm.tanggal as tanggal_transaksi, 'Masuk' as kategori
-                                                                        FROM tb_barang b
-                                                                        LEFT JOIN tb_barang_masuk bm ON b.id_barang = bm.id_barang
-                                                                        WHERE bm.id_barang IS NOT NULL
+                                                $query_brg = (" SELECT id_buku, judul_buku, tanggal_transaksi, kategori 
+                                                                FROM (  SELECT b.id_buku, b.judul_buku, bm.tanggal as tanggal_transaksi, 'Masuk' as kategori
+                                                                        FROM tb_buku b
+                                                                        LEFT JOIN tb_buku_masuk bm ON b.id_buku = bm.id_buku
+                                                                        WHERE bm.id_buku IS NOT NULL
                                                     
                                                                         UNION
                                                     
-                                                                        SELECT b.id_barang, b.nama, b.jenis, b.merk, bk.tanggal as tanggal_transaksi, 'Keluar' as kategori
-                                                                        FROM tb_barang b
-                                                                        LEFT JOIN tb_barang_keluar bk ON b.id_barang = bk.id_barang
-                                                                        WHERE bk.id_barang IS NOT NULL
+                                                                        SELECT b.id_buku, b.judul_buku, bk.tanggal as tanggal_transaksi, 'Keluar' as kategori
+                                                                        FROM tb_buku b
+                                                                        LEFT JOIN tb_buku_keluar bk ON b.id_buku = bk.id_buku
+                                                                        WHERE bk.id_buku IS NOT NULL
                                                                     ) AS combined_data
-                                                                ORDER BY tanggal_transaksi DESC, id_barang ASC;");
+                                                                ORDER BY tanggal_transaksi DESC, id_buku ASC;");
                                                 $result_brg = mysqli_query($conn, $query_brg);
                                                 while ($b = mysqli_fetch_array($result_brg)) {
                                                     $tanggal_format = date("d F Y", strtotime($b['tanggal_transaksi']));
                                                 ?>
                                             <tr>
-                                                <th class="text-gray-900" scope="row"><?php echo $b['id_barang'] ?></th>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['nama'] ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['jenis'] ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['merk'] ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $tanggal_format ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['kategori'] ?></td>
+                                                <th class="text-gray-900" scope="row"><?php echo $b['id_buku'] ?></th>
+                                                <td class="fw-bolder text-gray-500"><?php echo $b['judul'] ?></td>
                                             </tr>
                                             <?php } ?>
                                         </tbody>
@@ -228,24 +224,24 @@
                     <div class="col-12 px-0 mb-4">
                         <div class="card border-0 shadow">
                             <?php
-                                // Menghitung total transaksi dari tabel tb_barang_masuk
-                                $query_total_masuk = "SELECT SUM(jumlah) as total_masuk FROM tb_barang_masuk";
+                                // Menghitung total transaksi dari tabel tb_buku_masuk
+                                $query_total_masuk = "SELECT SUM(jumlah) as total_masuk FROM tb_buku_masuk";
                                 $result_total_masuk = $conn->query($query_total_masuk);
                                 $row_total_masuk = $result_total_masuk->fetch_assoc();
                                 $total_masuk = $row_total_masuk['total_masuk'];
 
-                                // Menghitung total transaksi dari tabel tb_barang_keluar
-                                $query_total_keluar = "SELECT SUM(jumlah) as total_keluar FROM tb_barang_keluar";
+                                // Menghitung total transaksi dari tabel tb_buku_keluar
+                                $query_total_keluar = "SELECT SUM(jumlah) as total_keluar FROM tb_buku_keluar";
                                 $result_total_keluar = $conn->query($query_total_keluar);
                                 $row_total_keluar = $result_total_keluar->fetch_assoc();
                                 $total_keluar = $row_total_keluar['total_keluar'];
 
-                                // Mengambil data dari tabel tb_barang_masuk
-                                $query_masuk = "SELECT MONTH(tanggal) as bulan, SUM(jumlah) as total_masuk FROM tb_barang_masuk GROUP BY MONTH(tanggal)";
+                                // Mengambil data dari tabel tb_buku_masuk
+                                $query_masuk = "SELECT MONTH(tanggal) as bulan, SUM(jumlah) as total_masuk FROM tb_buku_masuk GROUP BY MONTH(tanggal)";
                                 $result_masuk = $conn->query($query_masuk);
 
-                                // Mengambil data dari tabel tb_barang_keluar
-                                $query_keluar = "SELECT MONTH(tanggal) as bulan, SUM(jumlah) as total_keluar FROM tb_barang_keluar GROUP BY MONTH(tanggal)";
+                                // Mengambil data dari tabel tb_buku_keluar
+                                $query_keluar = "SELECT MONTH(tanggal) as bulan, SUM(jumlah) as total_keluar FROM tb_buku_keluar GROUP BY MONTH(tanggal)";
                                 $result_keluar = $conn->query($query_keluar);
 
                                 // Menyusun data untuk digunakan dalam script ApexCharts

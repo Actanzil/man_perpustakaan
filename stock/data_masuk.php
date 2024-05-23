@@ -180,7 +180,7 @@
                             <span class="sidebar-icon">
                                 <i class="bi bi-basket-fill"></i>
                             </span>
-                            <span class="sidebar-text">Persediaan Barang</span>
+                            <span class="sidebar-text">Daftar Barang</span>
                         </a>
                     </li>
                     <li class="nav-item active ">
