@@ -5,40 +5,74 @@
     $notification = "";
 
     if(isset($_POST['update'])){
-        $id_buku = $_POST['id_buku'];
-        $kd_buku = $_POST['kd_buku'];
-        $judul = $_POST['judul'];
-        $penulis = $_POST['penulis'];
-        $penerbit = $_POST['penerbit'];
-        $tahun = $_POST['tahun'];
-
-        $updatedata = mysqli_query($conn,"  UPDATE tb_buku 
-                                            SET kode_buku= '$kd_buku', judul_buku='$judul', penulis_buku='$penulis', penerbit_buku='$penerbit', tahun_terbit='$tahun' 
-                                            WHERE id_buku='$id_buku'");
+        include '../dbconnect.php';
+    
+        $id_user = $_POST['id_user'];
+        $nama = $_POST['nama'];
+        $email = $_POST['email'];
+        $username = $_POST['username'];
+        $level = $_POST['level'];
+        $password = $_POST['password'];
         
-        switch ($updatedata) {
-            case true:
-                $caption = "Selamat !!!";
-                $notification = "Data berhasil diperbarui!";
-                $alertType = "success";
-                break;
-            default:
+        // Handle file upload
+        $foto = $_FILES['foto']['name'];
+        $lokasi_file = $_FILES['foto']['tmp_name'];
+        $direktori = 'assets/foto-user/'.$foto;
+    
+        // Default query
+        $query = "UPDATE user SET nama='$nama', email='$email', username='$username', level='$level'";
+    
+        // Jika password diisi, tambahkan ke query
+        if (!empty($password)) {
+            $pass = mysqli_real_escape_string($conn, md5($password));
+            $query .= ", password='$pass'";
+        }
+    
+        // Jika file foto diunggah, tambahkan ke query
+        if (!empty($foto)) {
+            if (move_uploaded_file($lokasi_file, $direktori)) {
+                $query .= ", foto='$foto'";
+            } else {
                 $caption = "Mohon maaf !!!";
-                $notification = "Gagal memperbarui data!";
+                $notification = "Gagal mengunggah foto!";
                 $alertType = "danger";
+                $notification = [
+                    'type' => $alertType,
+                    'caption' => $caption,
+                    'message' => $notification
+                ];
+                $encodedNotification = urlencode(json_encode($notification));
+                header("Location: page_user.php?notification=$encodedNotification");
+                exit();
+            }
+        }
+    
+        // Lengkapi query dengan klausa WHERE
+        $query .= " WHERE id_user='$id_user'";
+    
+        // Jalankan query
+        $updatedata = mysqli_query($conn, $query);
+    
+        // Cek hasil query
+        if ($updatedata) {
+            $caption = "Selamat !!!";
+            $notification = "Data berhasil diperbarui!";
+            $alertType = "success";
+        } else {
+            $caption = "Mohon maaf !!!";
+            $notification = "Gagal memperbarui data!";
+            $alertType = "danger";
         }
     };
 
     if(isset($_POST['hapus'])){
-        $id_buku = $_POST['id_buku'];
+        $id_user = $_POST['id_user'];
 
-        $delete = mysqli_query($conn,"DELETE FROM tb_buku where id_buku='$id_buku'");
-        //hapus juga semua data buku ini di tabel keluar-masuk
-        $deltabelkeluar = mysqli_query($conn,"DELETE FROM tb_buku_keluar WHERE id_buku = '$id_buku'");
-        $deltabelmasuk = mysqli_query($conn,"DELETE FROM tb_buku_masuk WHERE id_buku = '$id_buku'");
+        $delete = mysqli_query($conn,"DELETE FROM user where id_user='$id_user'");
+        
         
         //cek apakah berhasil
-        switch ($delete && $deltabelkeluar && $deltabelmasuk) {
+        switch ($delete) {
             case true:
                 $caption = "Peringatan !!!";
                 $notification = "Data berhasil dihapus!";
@@ -242,46 +276,46 @@
                                 <h2 class="h6 modal-title">Formulir Tambah Data User</h2>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form action="konfirmasi_tambah_user.php" method="POST">
+                            <form action="konfirmasi_tambah_user.php" method="POST" enctype="multipart/form-data">
                                 <div class="modal-body">
                                     <div class="mb-3 row">
-                                        <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
+                                        <label for="foto" class="col-sm-2 col-form-label">Foto</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="kd_buku" name="kd_buku" required>
+                                            <input class="form-control" type="file" id="formFile" name="foto" required>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
+                                        <label for="nama" class="col-sm-2 col-form-label">Nama</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="judul" name="judul" required>
+                                            <input type="text" class="form-control" id="nama" name="nama" required>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
+                                        <label for="email" class="col-sm-2 col-form-label">Email</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="penulis" name="penulis" required>
+                                            <input type="text" class="form-control" id="email" name="email" required>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
+                                        <label for="username" class="col-sm-2 col-form-label">Username</label>
                                         <div class="col-sm-10">
-                                            <select class="form-select" aria-label="Default select example" name="penerbit" required>
-                                                <option selected>Pilih Penerbit</option>
-                                                <option value="Gramedia">Gramedia</option>
-                                                <option value="Togamas">Togamas</option>
+                                            <input type="text" class="form-control" name="username" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label for="password" class="col-sm-2 col-form-label">Password</label>
+                                        <div class="col-sm-10">
+                                            <input type="password" class="form-control" name="password" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
+                                        <label for="level" class="col-sm-2 col-form-label">Level</label>
+                                        <div class="col-sm-10">
+                                            <select class="form-select" aria-label="Default select example" name="level" required>
+                                                <option selected>Pilih Level</option>
+                                                <option value="Superadmin">Superadmin</option>
+                                                <option value="Admin">Admin</option>
                                             </select>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="ukuran" class="col-sm-2 col-form-label">Tahun Terbit</label>
-                                        <div class="col-sm-10">
-                                            <input type="date" class="form-control" id="tahun" name="tahun" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="ukuran" class="col-sm-2 col-form-label">Jumlah Persediaan</label>
-                                        <div class="col-sm-10">
-                                            <input type="number" class="form-control" id="stock" name="stock" required>
                                         </div>
                                     </div>
                                 </div>
@@ -300,11 +334,11 @@
                 <div class="row align-items-center justify-content-between">
                     <div class="col col-md-6 col-lg-3 col-xl-4">
                         <div class="input-group me-2 me-lg-3 fmxw-400">
-                            <form action="page_buku.php" method="GET">
+                            <form action="page_user.php" method="GET">
                                 <div class="input-group">
                                     <input type="text" class="form-control" placeholder="Masukkan kata kunci..." aria-label="Search" aria-describedby="basic-addon2" id="kata_kunci" name="katakunci" required>
                                     <button class="btn btn-primary" type="submit">Cari</button>
-                                    <a href="page_buku.php" class="btn btn-secondary">
+                                    <a href="page_user.php" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Reset
                                     </a>
                                 </div>
@@ -338,7 +372,7 @@
                                     <strong>$notificationCaption</strong> $notificationMessage.
                                     <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
                                 </div>
-                                <meta http-equiv='refresh' content='2; url= page_buku.php'/> ";
+                                <meta http-equiv='refresh' content='2; url= page_user.php'/> ";
                             }
                         ?>
                     </div>
@@ -414,46 +448,57 @@
                                             <h2 class="h6 modal-title">Formulir Edit Data User</h2>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <form action="" method="POST">
+                                        <form action="" method="POST" enctype="multipart/form-data">
                                             <div class="modal-body">
+                                                <input type="hidden" name="id_user" value="<?= $p['id_user'] ?>">
                                                 <div class="mb-3 row">
-                                                    <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="kd_buku" name="kd_buku" value="<?php echo $p['kode_buku'] ?>" required>
+                                                    <label for="foto" class="col-sm-2 col-form-label">Foto</label>
+                                                    <div class="col-sm-10 d-flex align-items-center">
+                                                        <div class="me-3">
+                                                            <img class="rounded avatar-xl" src="assets/foto-user/<?= $p['foto'] ?>" alt="Foto User <?php echo $p['nama'] ?>">
+                                                        </div>
+                                                        <div class="">
+                                                            <div class="d-flex justify-content-xl-center ms-xl-3">
+                                                                <div class="d-flex">
+                                                                    <input class="form-control" type="file" id="formFile" name="foto"><br>
+                                                                    <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah foto</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>     
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
-                                                    <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
+                                                    <label for="nama" class="col-sm-2 col-form-label">Nama</label>
                                                     <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="judul" name="judul" value="<?php echo $p['judul_buku'] ?>" required>
+                                                        <input type="text" class="form-control" id="nama" name="nama" value="<?php echo $p['nama'] ?>" required>
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
-                                                    <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
+                                                    <label for="email" class="col-sm-2 col-form-label">Email</label>
                                                     <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="penulis" name="penulis" value="<?php echo $p['penulis_buku'] ?>" required>
+                                                        <input type="text" class="form-control" id="email" name="email" value="<?php echo $p['email'] ?>" required>
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
-                                                    <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
+                                                    <label for="username" class="col-sm-2 col-form-label">Username</label>
                                                     <div class="col-sm-10">
-                                                        <select class="form-select" aria-label="Default select example" name="penerbit" required>
-                                                            <option value="Gramedia" <?php if ($p['penerbit_buku']=="Gramedia") { ?> selected <?php } ?>>Gramedia</option>
-                                                            <option value="Togamas" <?php if ($p['penerbit_buku']=="Togamas") { ?> selected <?php } ?>>Togamas</option>
+                                                        <input type="text" class="form-control" name="username" value="<?php echo $p['username'] ?>" required>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3 row">
+                                                    <label for="password" class="col-sm-2 col-form-label">Password</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="password" class="form-control" name="password" value="">
+                                                        <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah password</span>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3 row">
+                                                    <label for="penerbit" class="col-sm-2 col-form-label">Pilih Level</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-select" aria-label="Default select example" name="level" required>
+                                                            <option value="Superadmin" <?php if ($p['level']=="Superadmin") { ?> selected <?php } ?>>Superadmin</option>
+                                                            <option value="Admin" <?php if ($p['level']=="Admin") { ?> selected <?php } ?>>Admin</option>
                                                         </select>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="stock" class="col-sm-2 col-form-label">Stock</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="number" class="form-control" id="stock" value="<?php echo $p['stock'] ?>" disabled>
-                                                        <input type="hidden" name="id_buku" value="<?= $idb; ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -471,14 +516,14 @@
                                 <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Hapus Data Buku</h2>
+                                            <h2 class="h6 modal-title">Formulir Hapus Data User</h2>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <form action="" method="POST">
                                             <div class="modal-body">
-                                                <p>Judul Buku : <?php echo $p['judul_buku']?></p>
-                                                <p>Apakah Anda yakin ingin menghapus buku ini dari daftar buku?</p>
-                                                <input type="hidden" name="id_buku" value="<?=$idb;?>">
+                                                <p>Nama User : <?php echo $p['nama']?></p>
+                                                <p>Apakah Anda yakin ingin menghapus user ini dari daftar user?</p>
+                                                <input type="hidden" name="id_user" value="<?=$idb;?>">
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
@@ -516,19 +561,19 @@
                                     $sebelum = $halaman-1;
                                     $setelah = $halaman+1;
                                     if($halaman!=1){
-                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
+                                        echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
                                     }
                                     for($i=1; $i<=$jum_halaman; $i++){
                                         if ($i > $halaman - 5 and $i < $halaman + 5 ) {
                                             if($i!=$halaman){
-                                                echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$i'>$i</a></li>";
+                                                echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$i'>$i</a></li>";
                                             } else {
                                                 echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
                                         }
                                         }
                                     }
                                     if($halaman!=$jum_halaman){
-                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
+                                        echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
                                     }
                                 }
                             ?>
