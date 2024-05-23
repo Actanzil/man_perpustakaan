@@ -476,7 +476,7 @@
                 <!-- Item -->
                 <?php
                     // Limit untuk membatasi jumlah data pada satu halaman
-                    $batas = 5;
+                    $batas = 3;
                     if(!isset($_GET['halaman'])){
                         $posisi = 0;
                         $halaman = 1;
@@ -487,20 +487,39 @@
 
                     // Inisialisasi katakunci pencarian
                     $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
+
+                    // Query untuk menghitung jumlah total data
+                    $sql_jum = "SELECT COUNT(*) AS total FROM tb_buku";
+                    if (!empty($katakunci)) {
+                        $sql_jum .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                    }
+                    $query_jum = mysqli_query($conn, $sql_jum);
+                    $data_jum = mysqli_fetch_assoc($query_jum);
+                    $jum_data = $data_jum['total'];
+                    $jum_halaman = ceil($jum_data / $batas);
                     
                     // Query untuk menampilkan semua data pada tabel tb_buku
-                    $sql = "SELECT * FROM tb_buku";
+                    $sql = "SELECT b.*, GROUP_CONCAT(t.nama_tag SEPARATOR ', ') AS tags,
+                                    YEAR(b.tahun_terbit) AS tahun 
+                            FROM tb_buku b 
+                            LEFT JOIN tb_tag_buku tb ON b.id_buku = tb.id_buku 
+                            LEFT JOIN tb_tag t ON tb.id_tag = t.id_tag
+                            ";
                     
                     // Logika untuk pencarian
                     if (!empty($katakunci)) {
-                        $sql .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                        $sql .= " WHERE b.judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                     }
                     
+                    $sql .= " GROUP BY b.id_buku";
+                    
                     // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                    $sql .= " ORDER BY judul_buku ASC LIMIT $posisi, $batas";
+                    $sql .= " ORDER BY b.judul_buku ASC LIMIT $posisi, $batas";
 
                     $brgs = mysqli_query($conn, $sql);
-                    $no = 1;
+                    // Hitung jumlah data yang ditampilkan di halaman saat ini
+                    $showing_data = mysqli_num_rows($brgs);
+
                     while($p=mysqli_fetch_array($brgs)){
                         $idb = $p['id_buku'];
                     ?>
@@ -516,18 +535,28 @@
                                     <h3 class="h5"><?= $p['kode_buku'] ?> - <?= $p['judul_buku'] ?></h3>
                                     <div class="d-block d-sm-flex">
                                         <div>
-                                            <h4 class="h6 fw-normal text-gray mb-3 mb-sm-0"><i class="bi bi-person-lines-fill text-gray-500 me-1"></i> <?= $p['penulis_buku'] ?> - <?= $p['tahun_terbit'] ?></h4>
+                                            <h4 class="h6 fw-normal text-gray mb-3 mb-sm-0"><i class="bi bi-person-lines-fill text-gray-500 me-1"></i> <?= $p['penulis_buku'] ?> - <?= $p['tahun'] ?></h4>
                                         </div>
                                         <div class="ms-sm-3">
-                                            <h4 class="h6 fw-normal text-danger mb-3 mb-sm-0"><i class="bi bi-bookmark-heart-fill text-danger-500 me-1"></i> <b>5</b></h4>
+                                            <h4 class="h6 fw-normal text-danger mb-3 mb-sm-0"><i class="bi bi-bookmark-heart-fill text-danger-500 me-1"></i> <b><?= $p['stock'] ?></b></h4>
                                         </div>
                                         <div class="ms-sm-3">
-                                            <span class="badge super-badge bg-success"><?= $p['penerbit_buku'] ?></span>
+                                            <?php
+                                                $penerbitClass = '';
+                                                if ($p['penerbit_buku'] == 'Gramedia') {
+                                                    $penerbitClass = 'bg-success'; // Warna untuk Gramedia
+                                                } elseif ($p['penerbit_buku'] == 'Togamas') {
+                                                    $penerbitClass = 'bg-warning'; // Warna untuk Togamas
+                                                } else {
+                                                    $penerbitClass = 'bg-secondary'; // Warna default jika penerbit tidak dikenali
+                                                }
+                                            ?>
+                                            <span class="badge super-badge <?= $penerbitClass ?>"><?= $p['penerbit_buku'] ?></span>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <span class="fw-normal text-gray">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi pulvinar feugiat consequat. Duis lacus nibh, sagittis id varius vel, aliquet non augue.</span>
+                                    <span class="fw-normal text-gray"><?= $p['tags'] ?></span>
                                 </div>
                             </div>
                             <div class="col-10 col-sm-2 col-lg-2 col-xl-2 d-none d-lg-block d-xl-inline-flex align-items-center ms-lg-auto text-right justify-content-end px-md-0">
@@ -600,13 +629,13 @@
                                                     <div class="mb-3 row">
                                                         <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
                                                         <div class="col-sm-10">
-                                                            <input type="text" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
+                                                            <input type="date" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
                                                         </div>
                                                     </div>
                                                     <div class="mb-3 row">
                                                         <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
                                                         <div class="col-sm-10">
-                                                            <select name="tags[]" id="tags2" multiple>
+                                                            <select name="tags[]" multiple>
                                                                 <?php
                                                                     // Query untuk mendapatkan detail buku
                                                                     $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
@@ -678,44 +707,34 @@
                 <?php } ?>
                 <div class="row p-4">
                     <!-- Pagination -->
-                    <div class="col-7 mt-1">Showing <b>5</b> out of <b>25</b> entries</div>
+                    <div class="col-7 mt-1">Showing <b><?php echo $showing_data; ?></b> out of <b><?php echo $jum_data; ?></b> entries</div> <!-- Bagian Ini -->
                     <div class="col-5">
                         <nav aria-label="Page navigation example">
                             <ul class="pagination mb-0 float-end">
                                 <?php
-                                    //hitung jumlah semua data
-                                    $sql_jum = "SELECT * FROM tb_buku";
-                                    if (!empty($katakunci)){
-                                        $sql_jum .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                                if ($jum_halaman == 0) {
+                                    // tidak ada halaman
+                                } else if ($jum_halaman == 1) {
+                                    echo "<li class='page-item active'><a class='page-link'>1</a></li>";
+                                } else {
+                                    $sebelum = $halaman - 1;
+                                    $setelah = $halaman + 1;
+                                    if ($halaman != 1) {
+                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
                                     }
-                                    $sql_jum .= " ORDER BY judul_buku ASC";
-                                    $query_jum = mysqli_query($conn,$sql_jum);
-                                    $jum_data = mysqli_num_rows($query_jum);
-                                    $jum_halaman = ceil($jum_data/$batas);
-                                    
-                                    if($jum_halaman==0){
-                                        //tidak ada halaman
-                                    } else if($jum_halaman==1){
-                                        echo "<li class='page-item active'><a class='page-link'>1</a></li>";
-                                    } else {
-                                        $sebelum = $halaman-1;
-                                        $setelah = $halaman+1;
-                                        if($halaman!=1){
-                                            echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
-                                        }
-                                        for($i=1; $i<=$jum_halaman; $i++){
-                                            if ($i > $halaman - 5 and $i < $halaman + 5 ) {
-                                                if($i!=$halaman){
-                                                    echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$i'>$i</a></li>";
-                                                } else {
-                                                    echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
-                                            }
+                                    for ($i = 1; $i <= $jum_halaman; $i++) {
+                                        if ($i > $halaman - 5 and $i < $halaman + 5) {
+                                            if ($i != $halaman) {
+                                                echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$i'>$i</a></li>";
+                                            } else {
+                                                echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
                                             }
                                         }
-                                        if($halaman!=$jum_halaman){
-                                            echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
-                                        }
                                     }
+                                    if ($halaman != $jum_halaman) {
+                                        echo "<li class='page-item'><a class='page-link' href='page_buku.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
+                                    }
+                                }
                                 ?>
                             </ul>
                         </nav>
@@ -740,10 +759,18 @@
                 onChange: function(values) {
                     console.log(values)
                 }
-            })
+            })  
         </script>
         <script>
-            new MultiSelectTag('tags2', {
+            document.addEventListener('DOMContentLoaded', function() {
+    // Ambil semua elemen <select> di dalam modal
+    var selectElements = document.querySelectorAll('.modal select');
+    
+    // Iterasi melalui setiap elemen <select> dan cek apakah memiliki atribut 'multiple'
+    selectElements.forEach(function(element) {
+        if (element.multiple) {
+            // Jika memiliki atribut 'multiple', inisialisasi perilaku multi-select
+            new MultiSelectTag(element, {
                 rounded: true,
                 shadow: true,
                 placeholder: 'Search',
@@ -755,7 +782,12 @@
                 onChange: function(values) {
                     console.log(values)
                 }
-            })
+            });
+        }
+    });
+});
+
+
         </script>
 
         <!-- Core -->
