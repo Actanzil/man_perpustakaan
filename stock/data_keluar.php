@@ -224,6 +224,16 @@
                         </li>
                     <?php } ?>
                     <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
+                    <?php if ($_SESSION['level'] == "Superadmin") { ?>
+                        <li class="nav-item ">
+                            <a href="page_laporan.php" class="nav-link">
+                                <span class="sidebar-icon">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </span>
+                                <span class="sidebar-text">Laporan</span>
+                            </a>
+                        </li>
+                    <?php } ?>
                     <li class="nav-item ">
                         <a href="logout.php" class="nav-link">
                             <span class="sidebar-icon">
