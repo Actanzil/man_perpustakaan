@@ -499,7 +499,7 @@
                                         </div>
                                         <form action="" method="POST">
                                             <div class="modal-body">
-                                                <p>Judul Buku : <?php echo $p['juful_buku']?> - <?php echo $p['kode_buku']?></p>
+                                                <p>Judul Buku : <?php echo $p['judul_buku']?> - <?php echo $p['kode_buku']?></p>
                                                 <p>Apakah Anda yakin ingin menghapus buku ini dari daftar transaksi data masuk?</p>
                                                 <p>*Stock pada buku <?= $p['judul_buku'] ?> akan berkurang</p>
                                                 <input type="hidden" name="id_masuk" value="<?=$id_masuk;?>">
