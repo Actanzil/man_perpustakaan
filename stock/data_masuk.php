@@ -4,26 +4,26 @@
 
     if (isset($_POST['update'])) {
         $id_masuk = $_POST['id_masuk']; //id data masuk
-        $id_barang = $_POST['id_barang']; //id barang
+        $id_buku = $_POST['id_buku']; //id buku
         $jumlah = $_POST['jumlah'];
         $keterangan = $_POST['keterangan'];
         $tanggal = $_POST['tanggal'];
     
-        $lihatstock = mysqli_query($conn, "SELECT * FROM tb_barang WHERE id_barang='$id_barang'"); //lihat stock barang itu saat ini
+        $lihatstock = mysqli_query($conn, "SELECT * FROM tb_buku WHERE id_buku='$id_buku'"); //lihat stock buku itu saat ini
         $stocknya = mysqli_fetch_array($lihatstock); //ambil datanya
         $stockskrg = $stocknya['stock']; //jumlah stocknya skrg
     
-        $lihatdataskrg = mysqli_query($conn, "SELECT * FROM tb_barang_masuk WHERE id_masuk='$id_masuk'"); //lihat qty saat ini
+        $lihatdataskrg = mysqli_query($conn, "SELECT * FROM tb_buku_masuk WHERE id_masuk='$id_masuk'"); //lihat qty saat ini
         $preqtyskrg = mysqli_fetch_array($lihatdataskrg);
         $qtyskrg = $preqtyskrg['jumlah']; //jumlah skrg
     
         if ($jumlah >= $qtyskrg) {
-            //ternyata inputan baru lebih besar jumlah masuknya, maka tambahi lagi stock barang
+            //ternyata inputan baru lebih besar jumlah masuknya, maka tambahi lagi stock buku
             $hitungselisih = $jumlah - $qtyskrg;
             $tambahistock = $stockskrg + $hitungselisih;
     
-            $queryx = mysqli_query($conn, "UPDATE tb_barang SET stock='$tambahistock' WHERE id_barang='$id_barang'");
-            $updatedata1 = mysqli_query($conn, "UPDATE tb_barang_masuk SET tanggal = '$tanggal', jumlah = '$jumlah', keterangan = '$keterangan' WHERE id_masuk='$id_masuk'");
+            $queryx = mysqli_query($conn, "UPDATE tb_buku SET stock='$tambahistock' WHERE id_buku='$id_buku'");
+            $updatedata1 = mysqli_query($conn, "UPDATE tb_buku_masuk SET tanggal = '$tanggal', jumlah = '$jumlah', keterangan = '$keterangan' WHERE id_masuk='$id_masuk'");
     
             //cek apakah berhasil
             switch ($updatedata1 && $queryx) {
@@ -38,13 +38,13 @@
                     $alertType = "danger";
             } 
         } else {
-            //ternyata inputan baru lebih kecil jumlah masuknya, maka kurangi lagi stock barang
+            //ternyata inputan baru lebih kecil jumlah masuknya, maka kurangi lagi stock buku
             $hitungselisih = $qtyskrg - $jumlah;
             $kurangistock = $stockskrg - $hitungselisih;
     
-            $query1 = mysqli_query($conn, "UPDATE tb_barang SET stock='$kurangistock' WHERE id_barang = '$id_barang'");
+            $query1 = mysqli_query($conn, "UPDATE tb_buku SET stock='$kurangistock' WHERE id_buku = '$id_buku'");
     
-            $updatedata = mysqli_query($conn, "UPDATE tb_barang_masuk SET tgl='$tanggal', jumlah='$jumlah', keterangan='$keterangan' WHERE id_masuk='$id_masuk'");
+            $updatedata = mysqli_query($conn, "UPDATE tb_buku_masuk SET tgl='$tanggal', jumlah='$jumlah', keterangan='$keterangan' WHERE id_masuk='$id_masuk'");
     
             //cek apakah berhasil
             switch ($query1 && $updatedata) {
@@ -63,20 +63,20 @@
     
     if (isset($_POST['hapus'])) {
         $id_masuk = $_POST['id_masuk'];
-        $id_barang = $_POST['id_barang'];
+        $id_buku = $_POST['id_buku'];
     
-        $lihatstock = mysqli_query($conn, "SELECT * FROM tb_barang WHERE id_barang='$id_barang'"); //lihat stock barang itu saat ini
+        $lihatstock = mysqli_query($conn, "SELECT * FROM tb_buku WHERE id_buku='$id_buku'"); //lihat stock buku itu saat ini
         $stocknya = mysqli_fetch_array($lihatstock); //ambil datanya
         $stockskrg = $stocknya['stock']; //jumlah stocknya skrg
     
-        $lihatdataskrg = mysqli_query($conn, "SELECT * FROM tb_barang_masuk WHERE id_masuk='$id_masuk'"); //lihat qty saat ini
+        $lihatdataskrg = mysqli_query($conn, "SELECT * FROM tb_buku_masuk WHERE id_masuk='$id_masuk'"); //lihat qty saat ini
         $preqtyskrg = mysqli_fetch_array($lihatdataskrg);
         $qtyskrg = $preqtyskrg['jumlah']; //jumlah skrg
     
         $adjuststock = $stockskrg - $qtyskrg;
     
-        $queryx = mysqli_query($conn, "UPDATE tb_barang SET stock='$adjuststock' WHERE id_barang='$id_barang'");
-        $del = mysqli_query($conn, "DELETE FROM tb_barang_masuk WHERE id_masuk = '$id_masuk'");
+        $queryx = mysqli_query($conn, "UPDATE tb_buku SET stock='$adjuststock' WHERE id_buku='$id_buku'");
+        $del = mysqli_query($conn, "DELETE FROM tb_buku_masuk WHERE id_masuk = '$id_masuk'");
     
     
         //cek apakah berhasil
@@ -99,9 +99,9 @@
     <head> 
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <!-- Primary Meta Tags -->
-        <title>Pupuk - Admin</title>
+        <title>Perpustakaan - Admin</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="title" content="Pupuk - Administrasi">
+        <meta name="title" content="Perpustakaan - Administrasi">
 
         <!-- Favicon -->
         <link rel="apple-touch-icon" sizes="120x120" href="../assets/img/favicon/apple-touch-icon.png">
@@ -163,7 +163,7 @@
                             <span class="sidebar-icon">
                                 <img src="../assets/img/brand/light.svg" height="20" width="20" alt="Volt Logo">
                             </span>
-                            <span class="mt-1 ms-1 sidebar-text">Pupuk Admin</span>
+                            <span class="mt-1 ms-1 sidebar-text">Perpustakaan Admin</span>
                         </a>
                     </li>
                     <li class="nav-item ">
@@ -176,11 +176,11 @@
                     </li>
                     
                     <li class="nav-item ">
-                        <a href="page_barang.php" class="nav-link">
+                        <a href="page_buku.php" class="nav-link">
                             <span class="sidebar-icon">
                                 <i class="bi bi-basket-fill"></i>
                             </span>
-                            <span class="sidebar-text">Daftar Barang</span>
+                            <span class="sidebar-text">Daftar Buku</span>
                         </a>
                     </li>
                     <li class="nav-item active ">
@@ -283,26 +283,27 @@
                             <form action="konfirmasi_data_masuk.php" method="POST">
                                 <div class="modal-body">
                                     <div class="mb-3 row">
-                                        <label for="nama" class="col-sm-3 col-form-label">Nama Barang</label>
+                                        <label for="judul" class="col-sm-3 col-form-label">Judul Buku</label>
                                         <div class="col-sm-9">
-                                            <select class="form-select" id="js-example-basic-single" name="id_barang" style="width: 100%;" required>
-                                            <option value="0">Pilih Nama Barang</option>
+                                            <select class="form-select" id="js-example-basic-single" name="id_buku" style="width: 100%;" required>
+                                            <option value="0">Pilih Judul Buku</option>
                                                 <?php
-                                                    $sql_br = " SELECT `id_barang`, `nama` 
-                                                                FROM `tb_barang` 
-                                                                ORDER BY `nama`";
+                                                    $sql_br = " SELECT `id_buku`, `judul_buku`, `kode_buku` 
+                                                                FROM `tb_buku` 
+                                                                ORDER BY `judul_buku`";
                                                     $query_br = mysqli_query($conn, $sql_br);
                                                     while($data_br = mysqli_fetch_row($query_br)){
-                                                        $id_barang = $data_br[0];
-                                                        $nama = $data_br[1];
+                                                        $id_buku = $data_br[0];
+                                                        $judul = $data_br[1];
+                                                        $kode = $data_br[2];
                                                 ?>
-                                                <option value="<?= $id_barang; ?>"><?= $nama; ?></option>
+                                                <option value="<?= $id_buku; ?>"><?= $judul; ?> - <?= $kode; ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="stock" class="col-sm-3 col-form-label">Jumlah Barang</label>
+                                        <label for="stock" class="col-sm-3 col-form-label">Jumlah Masuk</label>
                                         <div class="col-sm-9">
                                             <input type="number" min="1" class="form-control" id="jumlah" name="jumlah" required>
                                         </div>
@@ -380,9 +381,8 @@
                     <thead class="thead-light">
                         <tr>
                             <th class="border-0 rounded-start">#</th>
-                            <th class="border-0">Nama Barang</th>
-                            <th class="border-0">Merk</th>
-                            <th class="border-0">Lokasi</th>
+                            <th class="border-0">Kode Buku</th>
+                            <th class="border-0">Judul Buku</th>
                             <th class="border-0">Jumlah</th>
                             <th class="border-0">Keterangan</th>
                             <th class="border-0 rounded-end"></th>
@@ -404,28 +404,27 @@
                             // Inisialisasi katakunci pencarian
                             $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                             
-                            // Query untuk menampilkan semua data pada tabel tb_barang_masuk yang telah digabungkan dengan data dari tb_barang
-                            $sql = "SELECT * FROM `tb_barang_masuk` `tbm` INNER JOIN `tb_barang` `tb` ON `tbm`.`id_barang` = `tb`.`id_barang`";
+                            // Query untuk menampilkan semua data pada tabel tb_buku_masuk yang telah digabungkan dengan data dari tb_buku
+                            $sql = "SELECT * FROM `tb_buku_masuk` `tbm` INNER JOIN `tb_buku` `tb` ON `tbm`.`id_buku` = `tb`.`id_buku`";
                             
                             // Logika untuk pencarian
                             if (!empty($katakunci)) {
-                                $sql .= " WHERE `tb`.`nama` LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                                $sql .= " WHERE `tb`.`judul_buku` LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                             }
                             
                             // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                            $sql .= " ORDER BY `tb`.`nama` ASC LIMIT $posisi, $batas";
+                            $sql .= " ORDER BY `tb`.`judul_buku` ASC LIMIT $posisi, $batas";
 
                             $brg = mysqli_query($conn, $sql);
                             $no = 1;
                             while($p=mysqli_fetch_array($brg)){
-                                $id_barang = $p['id_barang'];
+                                $id_buku = $p['id_buku'];
                                 $id_masuk = $p['id_masuk'];
                         ?>
                         <tr>
                             <td><a href="#" class="text-primary fw-bold"><?= $no++ ?></a> </td>
-                            <td><?= $p['nama'] ?></td>
-                            <td><?= $p['merk'] ?></td>
-                            <td><?= $p['lokasi'] ?></td>
+                            <td><?= $p['kode_buku'] ?></td>
+                            <td><?= $p['judul_buku'] ?></td>
                             <td><?= $p['jumlah'] ?></td>
                             <td><?= $p['keterangan'] ?></td>
                             <td>
@@ -455,24 +454,15 @@
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
-                                                    <label for="nama" class="col-sm-2 col-form-label">Nama Barang</label>
+                                                    <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
                                                     <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="nama" name="nama" value="<?php echo $p['nama'] ?>" disabled>
+                                                        <input type="text" class="form-control" id="kd_buku" value="<?php echo $p['kode_buku'] ?>" disabled>
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
-                                                    <label for="merk" class="col-sm-2 col-form-label">Merk Barang</label>
+                                                    <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
                                                     <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="merk" name="merk" value="<?php echo $p['merk'] ?>" disabled>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="lokasi" class="col-sm-2 col-form-label">Lokasi</label>
-                                                    <div class="col-sm-10">
-                                                        <select class="form-select" aria-label="Default select example" name="lokasi" disabled>
-                                                            <option value="Gudang 1" <?php if ($p['lokasi']=="Gudang 1") { ?> selected <?php } ?>>Gudang 1</option>
-                                                            <option value="Gudang 2" <?php if ($p['lokasi']=="Gudang 2") { ?> selected <?php } ?>>Gudang 2</option>
-                                                        </select>
+                                                        <input type="text" class="form-control" id="judul" value="<?php echo $p['judul_buku'] ?>" disabled>
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 row">
@@ -485,7 +475,7 @@
                                                     <label for="keterangan" class="col-sm-2 col-form-label">Keterangan</label>
                                                     <div class="col-sm-10">
                                                         <input type="text" class="form-control" id="keterangan" name="keterangan" value="<?php echo $p['keterangan'] ?>">
-                                                        <input type="hidden" name="id_barang" value="<?= $id_barang; ?>">
+                                                        <input type="hidden" name="id_buku" value="<?= $id_buku; ?>">
                                                         <input type="hidden" name="id_masuk" value="<?= $id_masuk; ?>">
                                                     </div>
                                                 </div>
@@ -509,11 +499,11 @@
                                         </div>
                                         <form action="" method="POST">
                                             <div class="modal-body">
-                                                <p>Nama Barang : <?php echo $p['nama']?> - <?php echo $p['jenis']?></p>
-                                                <p>Apakah Anda yakin ingin menghapus barang ini dari daftar transaksi data masuk?</p>
-                                                <p>*Stock pada barang <?= $p['nama'] ?> akan berkurang</p>
+                                                <p>Judul Buku : <?php echo $p['juful_buku']?> - <?php echo $p['kode_buku']?></p>
+                                                <p>Apakah Anda yakin ingin menghapus buku ini dari daftar transaksi data masuk?</p>
+                                                <p>*Stock pada buku <?= $p['judul_buku'] ?> akan berkurang</p>
                                                 <input type="hidden" name="id_masuk" value="<?=$id_masuk;?>">
-                                                <input type="hidden" name="id_barang" value="<?=$id_barang;?>">
+                                                <input type="hidden" name="id_buku" value="<?=$id_buku;?>">
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
@@ -534,11 +524,11 @@
                         <ul class="pagination mb-0">
                             <?php
                                 //hitung jumlah semua data
-                                $sql_jum = "SELECT * FROM `tb_barang_masuk` `tbm` INNER JOIN `tb_barang` `tb` ON `tbm`.`id_barang` = `tb`.`id_barang`";
+                                $sql_jum = "SELECT * FROM `tb_buku_masuk` `tbm` INNER JOIN `tb_buku` `tb` ON `tbm`.`id_buku` = `tb`.`id_buku`";
                                 if (!empty($katakunci)){
-                                    $sql_jum .= " WHERE `tb`.`nama` LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                                    $sql_jum .= " WHERE `tb`.`judul_buku` LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                                 }
-                                $sql_jum .= " ORDER BY `tb`.`nama` ASC";
+                                $sql_jum .= " ORDER BY `tb`.`judul_buku` ASC";
                                 $query_jum = mysqli_query($conn,$sql_jum);
                                 $jum_data = mysqli_num_rows($query_jum);
                                 $jum_halaman = ceil($jum_data/$batas);

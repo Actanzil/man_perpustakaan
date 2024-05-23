@@ -1,16 +1,16 @@
 <?php
   include '../dbconnect.php';
-  $id_barang = $_POST['id_barang']; // id barang
+  $id_buku = $_POST['id_buku']; // id buku
   $qty = $_POST['jumlah'];
   $tanggal = (new \DateTime())->format('Y-m-d');
   $ket = $_POST['keterangan'];
 
-  $dt = mysqli_query($conn, "SELECT * FROM tb_barang WHERE id_barang = '$id_barang'");
+  $dt = mysqli_query($conn, "SELECT * FROM tb_buku WHERE id_buku = '$id_buku'");
   $data = mysqli_fetch_array($dt);
   $sisa = $data['stock'] + $qty;
 
-  $query1 = mysqli_query($conn, "UPDATE tb_barang SET stock='$sisa' WHERE id_barang = '$id_barang'");
-  $query2 = mysqli_query($conn, "INSERT INTO tb_barang_masuk (id_barang, tanggal, jumlah, keterangan) VALUES('$id_barang','$tanggal','$qty','$ket')");
+  $query1 = mysqli_query($conn, "UPDATE tb_buku SET stock='$sisa' WHERE id_buku = '$id_buku'");
+  $query2 = mysqli_query($conn, "INSERT INTO tb_buku_masuk (id_buku, tanggal, jumlah, keterangan) VALUES('$id_buku','$tanggal','$qty','$ket')");
 
   if ($query1 && $query2) {
     // notifikasi
