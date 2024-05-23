@@ -1,6 +1,7 @@
 <?php
     include '../dbconnect.php';
     include 'cek.php';
+    include 'fungsi.php';
     
 
     if (isset($_POST['update'])) {
@@ -420,7 +421,12 @@
                             $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                             
                             // Query untuk menampilkan semua data pada tabel tb_buku_masuk yang telah digabungkan dengan data dari tb_buku
-                            $sql = "SELECT tbm.*, tb.judul_buku, tb.kode_buku, u.nama AS nama_user
+                            $sql = "SELECT 
+                                        tbm.*, 
+                                        DATE_FORMAT(tbm.tanggal, '%d-%m-%Y') AS tgl, 
+                                        tb.judul_buku, 
+                                        tb.kode_buku, 
+                                        u.nama AS nama_user
                                     FROM `tb_buku_masuk` `tbm` 
                                     INNER JOIN `tb_buku` `tb` ON `tbm`.`id_buku` = `tb`.`id_buku`
                                     INNER JOIN `user` u ON `tbm`.`id_user` = `u`.`id_user`";
@@ -444,7 +450,7 @@
                             <td><?= $p['kode_buku'] ?></td>
                             <td><?= $p['judul_buku'] ?></td>
                             <td><?= $p['jumlah'] ?></td>
-                            <td><?= $p['tanggal'] ?></td>
+                            <td><?= TanggalIndo($p['tgl']); ?></td>
                             <td><?= $p['nama_user'] ?></td>
                             <td><?= $p['keterangan'] ?></td>
                             <td>
