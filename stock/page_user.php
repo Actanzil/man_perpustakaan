@@ -129,7 +129,7 @@
                         </a>
                     </li>
                     
-                    <li class="nav-item active ">
+                    <li class="nav-item">
                         <a href="page_buku.php" class="nav-link">
                             <span class="sidebar-icon">
                                 <i class="bi bi-basket-fill"></i>
@@ -151,6 +151,14 @@
                                 <i class="bi bi-cart-dash-fill"></i>
                             </span>
                             <span class="sidebar-text">Data Keluar</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="page_user.php" class="nav-link">
+                            <span class="sidebar-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </span>
+                            <span class="sidebar-text">Data User</span>
                         </a>
                     </li>
                     <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
@@ -215,10 +223,10 @@
                                     <i class="bi bi-house-door-fill"></i>
                                 </a>
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Daftar Buku</li>
+                            <li class="breadcrumb-item active" aria-current="page">Daftar User</li>
                         </ol>
                     </nav>
-                    <h2 class="h4">Daftar Buku</h2>
+                    <h2 class="h4">Daftar User</h2>
                     <p class="mb-0">Your web analytics dashboard template.</p>
                 </div>
                 <div class="btn-toolbar mb-2 mb-md-0">
@@ -231,10 +239,10 @@
                     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h2 class="h6 modal-title">Formulir Tambah Data Buku</h2>
+                                <h2 class="h6 modal-title">Formulir Tambah Data User</h2>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form action="konfirmasi_tambah_buku.php" method="POST">
+                            <form action="konfirmasi_tambah_user.php" method="POST">
                                 <div class="modal-body">
                                     <div class="mb-3 row">
                                         <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
@@ -343,12 +351,10 @@
                     <thead class="thead-light">
                         <tr>
                             <th class="border-0 rounded-start">#</th>
-                            <th class="border-0">Kode</th>
-                            <th class="border-0">Judul</th>
-                            <th class="border-0">Penerbit</th>
-                            <th class="border-0">Penulis</th>
-                            <th class="border-0">Tahun</th>
-                            <th class="border-0">Persediaan</th>
+                            <th class="border-0">Nama</th>
+                            <th class="border-0">Email</th>
+                            <th class="border-0">Username</th>
+                            <th class="border-0">Level</th>
                             <th class="border-0 rounded-end"></th>
                         </tr>
                     </thead>
@@ -368,30 +374,28 @@
                             // Inisialisasi katakunci pencarian
                             $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                             
-                            // Query untuk menampilkan semua data pada tabel tb_buku
-                            $sql = "SELECT * FROM tb_buku";
+                            // Query untuk menampilkan semua data pada tabel user
+                            $sql = "SELECT * FROM user";
                             
                             // Logika untuk pencarian
                             if (!empty($katakunci)) {
-                                $sql .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                                $sql .= " WHERE nama LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                             }
                             
                             // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                            $sql .= " ORDER BY judul_buku ASC LIMIT $posisi, $batas";
+                            $sql .= " ORDER BY nama ASC LIMIT $posisi, $batas";
 
                             $brgs = mysqli_query($conn, $sql);
                             $no = 1;
                             while($p=mysqli_fetch_array($brgs)){
-                                $idb = $p['id_buku'];
+                                $idb = $p['id_user'];
                                 ?>
                         <tr>
                             <td><a href="#" class="text-primary fw-bold"><?= $no++ ?></a> </td>
-                            <td><?= $p['kode_buku'] ?></td>
-                            <td><?= $p['judul_buku'] ?></td>
-                            <td><?= $p['penulis_buku'] ?></td>
-                            <td><?= $p['penerbit_buku'] ?></td>
-                            <td><?= $p['tahun_terbit'] ?></td>
-                            <td><?= $p['stock'] ?></td>
+                            <td><?= $p['nama'] ?></td>
+                            <td><?= $p['email'] ?></td>
+                            <td><?= $p['username'] ?></td>
+                            <td><?= $p['level'] ?></td>
                             <td>
                                 <div class="dropdown ms-3">
                                     <button type="button" class="btn btn-sm fs-6 px-1 py-0 dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg></button>
@@ -407,7 +411,7 @@
                                 <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Edit Data Buku</h2>
+                                            <h2 class="h6 modal-title">Formulir Edit Data User</h2>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <form action="" method="POST">
@@ -495,11 +499,11 @@
                         <ul class="pagination mb-0">
                             <?php
                                 //hitung jumlah semua data
-                                $sql_jum = "SELECT * FROM tb_buku";
+                                $sql_jum = "SELECT * FROM user";
                                 if (!empty($katakunci)){
-                                    $sql_jum .= " WHERE judul_buku LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                                    $sql_jum .= " WHERE nama LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
                                 }
-                                $sql_jum .= " ORDER BY judul_buku ASC";
+                                $sql_jum .= " ORDER BY nama ASC";
                                 $query_jum = mysqli_query($conn,$sql_jum);
                                 $jum_data = mysqli_num_rows($query_jum);
                                 $jum_halaman = ceil($jum_data/$batas);
