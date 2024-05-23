@@ -22,12 +22,21 @@
         $penulis = $_POST['penulis'];
         $penerbit = $_POST['penerbit'];
         $tahun = $_POST['tahun'];
+        $tags = $_POST['tags']; // Ambil array dari tag yang dipilih
 
+        // Perbarui data buku
         $updatedata = mysqli_query($conn,"  UPDATE tb_buku 
                                             SET kode_buku= '$kd_buku', judul_buku='$judul', penulis_buku='$penulis', penerbit_buku='$penerbit', tahun_terbit='$tahun' 
                                             WHERE id_buku='$id_buku'");
-        
-        switch ($updatedata) {
+
+        // Hapus semua tag buku lama
+        $delete_old_tags = mysqli_query($conn, "DELETE FROM tb_tag_buku WHERE id_buku='$id_buku'");
+
+        // Tambahkan tag baru
+        foreach ($tags as $tag_id) {
+            $add_tag = mysqli_query($conn, "INSERT INTO tb_tag_buku (id_buku, id_tag) VALUES ('$id_buku', '$tag_id')");
+        }
+        switch ($updatedata && $delete_old_tags && $add_tag) {
             case true:
                 $caption = "Selamat !!!";
                 $notification = "Data berhasil diperbarui!";
@@ -83,9 +92,14 @@
 
         <!-- Bootstrap Icon -->
         <link type="text/css" href="../vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+        <!-- Styles -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.0.1/dist/css/multi-select-tag.css">
+        <script src="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.0.1/dist/js/multi-select-tag.js"></script>
 
         <!-- Volt CSS -->
         <link type="text/css" href="../css/volt.css" rel="stylesheet">
+
+        
     </head>
 
     <body>
@@ -313,6 +327,24 @@
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
+                                        <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
+                                        <div class="col-sm-10">
+                                            <select name="tags[]" id="tags" multiple>
+                                                <?php
+                                                    $sql_tg = " SELECT `id_tag`, `nama_tag` 
+                                                                FROM `tb_tag` 
+                                                                ORDER BY `nama_tag`";
+                                                    $query_tg = mysqli_query($conn, $sql_tg);
+                                                    while($data_tg = mysqli_fetch_row($query_tg)){
+                                                        $id_tag = $data_tg[0];
+                                                        $nama = $data_tg[1];
+                                                ?>
+                                                <option value="<?= $id_tag; ?>"><?= $nama; ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 row">
                                         <label for="ukuran" class="col-sm-2 col-form-label">Jumlah Persediaan</label>
                                         <div class="col-sm-10">
                                             <input type="number" class="form-control" id="stock" name="stock" required>
@@ -425,7 +457,7 @@
                             $no = 1;
                             while($p=mysqli_fetch_array($brgs)){
                                 $idb = $p['id_buku'];
-                                ?>
+                            ?>
                         <tr>
                             <td><a href="#" class="text-primary fw-bold"><?= $no++ ?></a> </td>
                             <td><?= $p['kode_buku'] ?></td>
@@ -453,6 +485,7 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <form action="" method="POST">
+                                            
                                             <div class="modal-body">
                                                 <div class="mb-3 row">
                                                     <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
@@ -487,6 +520,36 @@
                                                         <input type="text" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
                                                     </div>
                                                 </div>
+                                                <div class="mb-3 row">
+                                                    <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
+                                                    <div class="col-sm-10">
+                                                        <select name="tags[]" id="tags2" multiple>
+                                                            <?php
+                                                                // Query untuk mendapatkan detail buku
+                                                                $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
+                                                                $query_buku = mysqli_query($conn, $sql_buku);
+                                                                $p = mysqli_fetch_assoc($query_buku);
+                
+                                                                // Query untuk mendapatkan tag yang terkait dengan buku ini
+                                                                $sql_tags_selected = "SELECT id_tag FROM tb_tag_buku WHERE id_buku = '$idb'";
+                                                                $query_tags_selected = mysqli_query($conn, $sql_tags_selected);
+                                                                $selected_tags = [];
+                                                                while ($row = mysqli_fetch_assoc($query_tags_selected)) {
+                                                                    $selected_tags[] = $row['id_tag'];
+                                                                }
+                                                                $sql_tg = "SELECT `id_tag`, `nama_tag` FROM `tb_tag` ORDER BY `nama_tag`";
+                                                                $query_tg = mysqli_query($conn, $sql_tg);
+                                                                while($data_tg = mysqli_fetch_row($query_tg)){
+                                                                    $id_tag = $data_tg[0];
+                                                                    $nama = $data_tg[1];
+                                                                    $selected = in_array($id_tag, $selected_tags) ? 'selected' : ''; // Memeriksa apakah tag ini sudah dipilih sebelumnya
+                                                            ?>
+                                                            <option value="<?= $id_tag; ?>" <?= $selected; ?>><?= $nama; ?></option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
                                                 <div class="mb-3 row">
                                                     <label for="stock" class="col-sm-2 col-form-label">Stock</label>
                                                     <div class="col-sm-10">
@@ -531,6 +594,8 @@
                     </tbody>
                 </table>
 
+                
+
                 <!-- Pagination -->
                 <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row align-items-center justify-content-between">
                     <nav aria-label="Page navigation example">
@@ -574,9 +639,43 @@
                     </nav>
                 </div>
             </div>
+            
         </main>
 
         <!-- Script -->
+        <!-- Main -->
+        
+        <script>
+            new MultiSelectTag('tags', {
+                rounded: true,
+                shadow: true,
+                placeholder: 'Search',
+                tagColor: {
+                    textColor: '#ffffff',
+                    borderColor: '#92e681',
+                    bgColor: '#eaffe6',
+                },
+                onChange: function(values) {
+                    console.log(values)
+                }
+            })
+        </script>
+        <script>
+            new MultiSelectTag('tags2', {
+                rounded: true,
+                shadow: true,
+                placeholder: 'Search',
+                tagColor: {
+                    textColor: '#ffffff',
+                    borderColor: '#92e681',
+                    bgColor: '#eaffe6',
+                },
+                onChange: function(values) {
+                    console.log(values)
+                }
+            })
+        </script>
+
         <!-- Core -->
         <script src="../vendor/@popperjs/core/dist/umd/popper.min.js"></script>
         <script src="../vendor/bootstrap/dist/js/bootstrap.min.js"></script>
