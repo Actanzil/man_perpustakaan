@@ -1,6 +1,7 @@
 <?php
   include '../dbconnect.php';
   $id_buku = $_POST['id_buku']; //id buku
+  $id_user = $_POST['id_user']; // id user
   $qty = $_POST['jumlah'];
   $tanggal = (new \DateTime())->format('Y-m-d');
   $ket = $_POST['keterangan'];
@@ -10,7 +11,7 @@
   $sisa = $data['stock'] - $qty;
 
   $query1 = mysqli_query($conn, "UPDATE tb_buku SET stock='$sisa' WHERE id_buku = '$id_buku'");
-  $query2 = mysqli_query($conn, "INSERT INTO tb_buku_keluar(id_buku, tanggal, jumlah, keterangan) VALUES('$id_buku','$tanggal','$qty','$ket')");
+  $query2 = mysqli_query($conn, "INSERT INTO tb_buku_keluar(id_buku, id_user, tanggal, jumlah, keterangan) VALUES('$id_buku','$id_user','$tanggal','$qty','$ket')");
 
   if ($query1 && $query2) {
     // notifikasi

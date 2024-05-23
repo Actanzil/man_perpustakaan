@@ -5,6 +5,7 @@
     if (isset($_POST['update'])) {
         $id_keluar = $_POST['id_keluar']; //id data keluar
         $id_buku = $_POST['id_buku']; //id buku
+        $id_user = $_POST['id_user']; // id user
         $jumlah = $_POST['jumlah'];
         $keterangan = $_POST['keterangan'];
         $tanggal = $_POST['tanggal'];
@@ -23,7 +24,7 @@
             $tambahistock = $stockskrg + $hitungselisih;
     
             $queryx = mysqli_query($conn, "UPDATE tb_buku SET stock='$tambahistock' WHERE id_buku='$id_buku'");
-            $updatedata1 = mysqli_query($conn, "UPDATE tb_buku_keluar SET tanggal = '$tanggal', jumlah = '$jumlah', keterangan = '$keterangan' WHERE id_keluar = '$id_keluar'");
+            $updatedata1 = mysqli_query($conn, "UPDATE tb_buku_keluar SET id_user = '$id_user', tanggal = '$tanggal', jumlah = '$jumlah', keterangan = '$keterangan' WHERE id_keluar = '$id_keluar'");
     
             //cek apakah berhasil
             switch ($updatedata1 && $queryx) {
@@ -44,7 +45,7 @@
     
             $query1 = mysqli_query($conn, "UPDATE tb_buku SET stock='$kurangistock' WHERE id_buku = '$id_buku'");
     
-            $updatedata = mysqli_query($conn, "UPDATE tb_buku_keluar SET tgl='$tanggal', jumlah='$jumlah', keterangan='$keterangan' WHERE id_keluar = '$id_keluar'");
+            $updatedata = mysqli_query($conn, "UPDATE tb_buku_keluar SET id_user = '$id_user', tanggal ='$tanggal', jumlah='$jumlah', keterangan='$keterangan' WHERE id_keluar = '$id_keluar'");
     
             //cek apakah berhasil
             switch ($query1 && $updatedata) {
@@ -200,14 +201,16 @@
                             <span class="sidebar-text">Data Keluar</span>
                         </a>
                     </li>
-                    <li class="nav-item ">
-                        <a href="page_user.php" class="nav-link">
-                            <span class="sidebar-icon">
-                                <i class="bi bi-people-fill"></i>
-                            </span>
-                            <span class="sidebar-text">Data User</span>
-                        </a>
-                    </li>
+                    <?php if ($_SESSION['level'] == "Superadmin") { ?>
+                        <li class="nav-item ">
+                            <a href="page_user.php" class="nav-link">
+                                <span class="sidebar-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </span>
+                                <span class="sidebar-text">Data User</span>
+                            </a>
+                        </li>
+                    <?php } ?>
                     <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
                     <li class="nav-item ">
                         <a href="logout.php" class="nav-link">
@@ -290,6 +293,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <form action="konfirmasi_data_keluar.php" method="POST">
+                                <input type="hidden" name="id_user" value="<?php echo $_SESSION['id']; ?>">
                                 <div class="modal-body">
                                     <div class="mb-3 row">
                                         <label for="judul" class="col-sm-3 col-form-label">Judul Buku</label>
@@ -393,6 +397,8 @@
                             <th class="border-0">Kode Buku</th>
                             <th class="border-0">Judul Buku</th>
                             <th class="border-0">Jumlah</th>
+                            <th class="border-0">Tanggal</th>
+                            <th class="border-0">User</th>
                             <th class="border-0">Keterangan</th>
                             <th class="border-0 rounded-end"></th>
                         </tr>
@@ -414,7 +420,10 @@
                             $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                             
                             // Query untuk menampilkan semua data pada tabel tb_buku_keluar yang telah digabungkan dengan data dari tb_buku
-                            $sql = "SELECT * FROM `tb_buku_keluar` `tbk` INNER JOIN `tb_buku` `tb` ON `tbk`.`id_buku` = `tb`.`id_buku`";
+                            $sql = "SELECT tbk.*, tb.judul_buku, tb.kode_buku, u.nama AS nama_user 
+                                    FROM `tb_buku_keluar` `tbk` 
+                                    INNER JOIN `tb_buku` `tb` ON `tbk`.`id_buku` = `tb`.`id_buku`
+                                    INNER JOIN `user` u ON `tbk`.`id_user` = `u`.`id_user`";
                             
                             // Logika untuk pencarian
                             if (!empty($katakunci)) {
@@ -435,6 +444,8 @@
                             <td><?= $p['kode_buku'] ?></td>
                             <td><?= $p['judul_buku'] ?></td>
                             <td><?= $p['jumlah'] ?></td>
+                            <td><?= $p['tanggal'] ?></td>
+                            <td><?= $p['nama_user'] ?></td>
                             <td><?= $p['keterangan'] ?></td>
                             <td>
                                 <div class="dropdown ms-3">
@@ -487,6 +498,7 @@
                                                         <input type="text" class="form-control" id="keterangan" name="keterangan" value="<?php echo $p['keterangan'] ?>">
                                                         <input type="hidden" name="id_buku" value="<?= $id_buku; ?>">
                                                         <input type="hidden" name="id_keluar" value="<?= $id_keluar; ?>">
+                                                        <input type="hidden" name="id_user" value="<?php echo $_SESSION['id']; ?>">
                                                     </div>
                                                 </div>
                                             </div>
