@@ -1,6 +1,7 @@
 <?php
     include '../dbconnect.php';
     include 'cek.php';
+    include 'fungsi.php';
 
     // Pastikan hanya Superadmin yang dapat mengakses halaman ini
     if ($_SESSION['level'] != "Superadmin") {
@@ -20,115 +21,50 @@
       $nama = $data_us[1];
     }
 
-    $notification = "";
+    if (isset($_POST['cetak'])) {
+        // Ambil nilai input type hidden
+        $id_laporan = $_POST['id_laporan'];
 
-    if(isset($_POST['update'])){
-        include '../dbconnect.php';
-    
-        $id_user = $_POST['id_user'];
-        $nama = $_POST['nama'];
-        $email = $_POST['email'];
-        $username = $_POST['username'];
-        $level = $_POST['level'];
-        $password = $_POST['password'];
+        // Redirect ke halaman selanjutnya dengan mengirimkan data menggunakan URL
+        header("Location: cetak_laporan.php?id_laporan=$id_laporan");
+        exit(); // Pastikan untuk keluar setelah mengirimkan header redirect
+    };
+
+    // Periksa apakah formulir hapus telah dikirim
+    if (isset($_POST['hapus'])) {
+        $id_laporan = $_POST['id_laporan'];
         
-        // Handle file upload
-        $foto = $_FILES['foto']['name'];
-        $lokasi_file = $_FILES['foto']['tmp_name'];
-        $direktori = 'assets/foto-user/'.$foto;
-    
-        // Default query
-        $query = "UPDATE user SET nama='$nama', email='$email', username='$username', level='$level'";
-    
-        // Jika password diisi, tambahkan ke query
-        if (!empty($password)) {
-            $pass = mysqli_real_escape_string($conn, md5($password));
-            $query .= ", password='$pass'";
-        }
-    
-        // Jika file foto diunggah, hapus foto lama dan tambahkan foto baru ke direktori
-        if (!empty($foto)) {
-            // Ambil nama foto lama
-            $query_foto_lama = mysqli_query($conn, "SELECT foto FROM user WHERE id_user='$id_user'");
-            $data_foto_lama = mysqli_fetch_assoc($query_foto_lama);
-            $nama_foto_lama = $data_foto_lama['foto'];
-    
-            // Hapus foto lama dari direktori jika ada
-            if (!empty($nama_foto_lama) && file_exists('assets/foto-user/'.$nama_foto_lama)) {
-                unlink('assets/foto-user/'.$nama_foto_lama);
-            }
-    
-            // Pindahkan foto baru ke direktori
-            if (move_uploaded_file($lokasi_file, $direktori)) {
-                $query .= ", foto='$foto'";
-            } else {
-                $caption = "Mohon maaf !!!";
-                $notification = "Gagal mengunggah foto!";
-                $alertType = "danger";
-                $notification = [
-                    'type' => $alertType,
-                    'caption' => $caption,
-                    'message' => $notification
-                ];
-                $encodedNotification = urlencode(json_encode($notification));
-                header("Location: page_user.php?notification=$encodedNotification");
-                exit();
-            }
-        }
-    
-        // Lengkapi query dengan klausa WHERE
-        $query .= " WHERE id_user='$id_user'";
-    
-        // Jalankan query
-        $updatedata = mysqli_query($conn, $query);
-    
-        // Cek hasil query
-        if ($updatedata) {
-            $caption = "Selamat !!!";
-            $notification = "Data berhasil diperbarui!";
-            $alertType = "success";
+        // Query untuk menghapus data laporan berdasarkan id_laporan
+        $query = "DELETE FROM tb_laporan WHERE id_laporan = '$id_laporan'";
+        $result = mysqli_query($conn, $query);
+        
+        if ($result) {
+            // notifikasi
+            $notificationType = "success";
+            $notificationCaption = "Selamat !!!";
+            $notificationMessage = "Data berhasil dihapus!";
         } else {
-            $caption = "Mohon maaf !!!";
-            $notification = "Gagal memperbarui data!";
-            $alertType = "danger";
-        }
-    };
-    
-
-    if(isset($_POST['hapus'])){
-        $id_user = $_POST['id_user'];
-
-        // Ambil nama foto pengguna dari basis data
-        $query_foto = mysqli_query($conn, "SELECT foto FROM user WHERE id_user='$id_user'");
-        $data_foto = mysqli_fetch_assoc($query_foto);
-        $nama_foto = $data_foto['foto'];
-
-        // Hapus foto dari direktori jika foto ada
-        if(!empty($nama_foto)) {
-            $path_to_file = 'assets/foto-user/' . $nama_foto;
-            if(file_exists($path_to_file)) {
-                unlink($path_to_file);
-            }
+            // notifikasi
+            $notificationType = "warning";
+            $notificationCaption = "Mohon maaf !!!";
+            $notificationMessage = "Gagal menghapus data!";
         }
 
-        $delete = mysqli_query($conn,"DELETE FROM user where id_user='$id_user'");
-        //hapus juga semua data user ini di tabel keluar-masuk
-        $deltabelkeluar = mysqli_query($conn,"DELETE FROM tb_buku_keluar WHERE id_user = '$id_user'");
-        $deltabelmasuk = mysqli_query($conn,"DELETE FROM tb_buku_masuk WHERE id_user = '$id_user'");
-        
-        //cek apakah berhasil
-        switch ($delete && $deltabelkeluar && $deltabelmasuk) {
-            case true:
-                $caption = "Peringatan !!!";
-                $notification = "Data berhasil dihapus!";
-                $alertType = "warning";
-                break;
-            default:
-                $caption = "Mohon maaf !!!";
-                $notification = "Gagal menghapus data!";
-                $alertType = "danger";
-        }
-    };
+        // Set notifikasi dalam format array
+        $notification = [
+            'type' => $notificationType,
+            'caption' => $notificationCaption,
+            'message' => $notificationMessage
+        ];
+
+        // Convert array ke JSON dan encode untuk ditransfer melalui URL
+        $encodedNotification = urlencode(json_encode($notification));
+
+        // Redirect ke halaman page laporan dengan notifikasi
+        header("Location: page_laporan.php?notification=$encodedNotification");
+        exit();
+    }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -154,12 +90,15 @@
 
         <!-- Volt CSS -->
         <link type="text/css" href="../css/volt.css" rel="stylesheet">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
     </head>
 
     <body>
         <nav class="navbar navbar-dark navbar-theme-primary px-4 col-12 d-lg-none">
             <a class="navbar-brand me-lg-5" href="index.html">
-                <img class="navbar-brand-dark" src="../assets/img/brand/light.svg" alt="Volt logo" /> <img class="navbar-brand-light" src="../assets/img/brand/dark.svg" alt="Volt logo" />
+                <img class="navbar-brand-dark" src="../assets/img/brand/light.svg" alt="Volt logo"/> <img class="navbar-brand-light" src="../assets/img/brand/dark.svg" alt="Volt logo" />
             </a>
             <div class="d-flex align-items-center">
                 <button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -334,56 +273,48 @@
                 <div class="btn-toolbar mb-2 mb-md-0">
                     <a href="#" class="btn btn-sm btn-gray-800 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modal-default">
                         <i class="bi bi-plus-lg me-2"></i>
-                        Tambah Data
+                        Buat Laporan
                     </a>
                 </div>
                 <div class="modal fade" id="modal-default" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
                     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h2 class="h6 modal-title">Formulir Tambah Data User</h2>
+                                <h2 class="h6 modal-title">Formulir Buat Laporan</h2>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form action="konfirmasi_tambah_user.php" method="POST" enctype="multipart/form-data">
+                            <form action="konfirmasi_buat_laporan.php" method="POST">
+                                <input type="hidden" name="id_user" value="<?php echo $_SESSION['id']; ?>">
                                 <div class="modal-body">
                                     <div class="mb-3 row">
-                                        <label for="foto" class="col-sm-2 col-form-label">Foto</label>
-                                        <div class="col-sm-10">
-                                            <input class="form-control" type="file" id="formFile" name="foto" required>
+                                        <label for="kode" class="col-sm-3 col-form-label">Kode Laporan</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <span class="input-group-text" id="basic-addon3">LPRN//355/01/</span>
+                                                <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4" name="kode">
+                                            </div>
+                                            
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="nama" class="col-sm-2 col-form-label">Nama</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="nama" name="nama" required>
+                                        <label for="judul" class="col-sm-3 col-form-label">Judul Laporan</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" name="judul" required>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="email" class="col-sm-2 col-form-label">Email</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="email" name="email" required>
+                                        <label for="bulan" class="col-sm-3 col-form-label">Periode Laporan</label>
+                                        <div class="col-sm-4">
+                                            <input type="number" min="1" max="12" class="form-control" name="bulan" placeholder="Bulan" required>
+                                        </div>
+                                        <div class="col-sm-5">
+                                            <input type="number" min="2020" max="2024" class="form-control" name="tahun" placeholder="Tahun" required>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="username" class="col-sm-2 col-form-label">Username</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" name="username" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="password" class="col-sm-2 col-form-label">Password</label>
-                                        <div class="col-sm-10">
-                                            <input type="password" class="form-control" name="password" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="level" class="col-sm-2 col-form-label">Level</label>
-                                        <div class="col-sm-10">
-                                            <select class="form-select" aria-label="Default select example" name="level" required>
-                                                <option selected>Pilih Level</option>
-                                                <option value="Superadmin">Superadmin</option>
-                                                <option value="Admin">Admin</option>
-                                            </select>
+                                        <label for="keterangan" class="col-sm-3 col-form-label">Keterangan Laporan</label>
+                                        <div class="col-sm-9">
+                                            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="keterangan" required></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -402,11 +333,11 @@
                 <div class="row align-items-center justify-content-between">
                     <div class="col col-md-6 col-lg-3 col-xl-4">
                         <div class="input-group me-2 me-lg-3 fmxw-400">
-                            <form action="page_user.php" method="GET">
+                            <form action="page_laporan.php" method="GET">
                                 <div class="input-group">
                                     <input type="text" class="form-control" placeholder="Masukkan kata kunci..." aria-label="Search" aria-describedby="basic-addon2" id="kata_kunci" name="katakunci" required>
                                     <button class="btn btn-primary" type="submit">Cari</button>
-                                    <a href="page_user.php" class="btn btn-secondary">
+                                    <a href="page_laporan.php" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Reset
                                     </a>
                                 </div>
@@ -440,222 +371,215 @@
                                     <strong>$notificationCaption</strong> $notificationMessage.
                                     <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
                                 </div>
-                                <meta http-equiv='refresh' content='2; url= page_user.php'/> ";
+                                <meta http-equiv='refresh' content='2; url= page_laporan.php'/> ";
                             }
                         ?>
                     </div>
                 </div>
             </div>
             <!-- End Kolom Pencarian -->
-            
-            <div class="card card-body border-0 shadow table-wrapper table-responsive">
-                <table class="table table-centered table-nowrap mb-0 rounded">
-                    <thead class="thead-light">
-                        <tr>
-                            <th class="border-0 rounded-start">#</th>
-                            <th class="border-0">Nama</th>
-                            <th class="border-0">Email</th>
-                            <th class="border-0">Username</th>
-                            <th class="border-0">Level</th>
-                            <th class="border-0 rounded-end"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Item -->
-                        <?php
-                            // Limit untuk membatasi jumlah data pada satu halaman
-                            $batas = 5;
-                            if(!isset($_GET['halaman'])){
-                                $posisi = 0;
-                                $halaman = 1;
-                            }else{
-                                $halaman = $_GET['halaman'];
-                                $posisi = ($halaman-1) * $batas;
-                            }
 
-                            // Inisialisasi katakunci pencarian
-                            $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
-                            
-                            // Ambil id_user dari session
-                            $id_user_login = $_SESSION['id'];
+            <div class="container-fluid py-4 px-0">
+                <div class="row">
+                    <?php
+                        // Limit untuk membatasi jumlah data pada satu halaman
+                        $batas = 5;
+                        if(!isset($_GET['halaman'])){
+                            $posisi = 0;
+                            $halaman = 1;
+                        }else{
+                            $halaman = $_GET['halaman'];
+                            $posisi = ($halaman-1) * $batas;
+                        }
 
-                            // Query untuk menampilkan semua data pada tabel user kecuali user yang sedang login
-                            $sql = "SELECT * FROM user WHERE id_user != $id_user_login";
-                            
-                            // Logika untuk pencarian
-                            if (!empty($katakunci)) {
-                                $sql .= " WHERE nama LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
-                            }
-                            
-                            // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                            $sql .= " ORDER BY nama ASC LIMIT $posisi, $batas";
+                        // Inisialisasi katakunci pencarian
+                        $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
+                        
+                        // Query untuk menampilkan semua data pada tabel user kecuali user yang sedang login
+                        $sql = "SELECT * FROM tb_laporan";
+                        
+                        // Logika untuk pencarian
+                        if (!empty($katakunci)) {
+                            $sql .= " WHERE judul_laporan LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
+                        }
+                        
+                        // Mengurutkan data berdasarkan judul dan membatasi data sesuai batasan yang telah ditentukan
+                        $sql .= " ORDER BY tanggal ASC LIMIT $posisi, $batas";
 
-                            $brgs = mysqli_query($conn, $sql);
-                            $no = 1;
-                            while($p=mysqli_fetch_array($brgs)){
-                                $idb = $p['id_user'];
-                                ?>
-                        <tr>
-                            <td><a href="#" class="text-primary fw-bold"><?= $no++ ?></a> </td>
-                            <td><?= $p['nama'] ?></td>
-                            <td><?= $p['email'] ?></td>
-                            <td><?= $p['username'] ?></td>
-                            <td><?= $p['level'] ?></td>
-                            <td>
-                                <div class="dropdown ms-3">
-                                    <button type="button" class="btn btn-sm fs-6 px-1 py-0 dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg></button>
-                                    <div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#edit<?= $idb; ?>"><svg class="dropdown-icon text-gray-400 me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg> Edit Data</a>
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>"><svg class="dropdown-icon text-danger me-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> Hapus Data</a>
+                        $brgs = mysqli_query($conn, $sql);
+                        while($p=mysqli_fetch_array($brgs)){
+                            $idb = $p['id_laporan'];
+                        
+                    ?>
+                    <div class="col-md-6 col-lg-3 mt-2 mb-2">
+                        <div class="list-group kanban-list">
+                            <div class="card border-0 shadow p-4">
+                                <div class="card-header d-flex align-items-center justify-content-between border-0 p-0 mb-3">
+                                    <h3 class="h5 mb-0"><?= $p['judul_laporan']; ?></h3>
+                                    <div>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn btn-sm fs-6 px-1 py-0 dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false"><svg class="icon icon-xs text-gray-500" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
+                                            <div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
+                                                <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#detail<?= $idb; ?>">
+                                                    <i class="bi bi-arrows-fullscreen text-gray-400 me-2"></i>
+                                                    Detail Laporan 
+                                                </a>
+                                                <div role="separator" class="dropdown-divider my-1"></div>
+                                                <a class="dropdown-item d-flex align-items-center" href="#" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>"><i class="bi bi-trash-fill text-danger me-2"></i> Hapus Laporan</a>
+                                            </div>
+                                            <div class="dropdown-menu dashboard-dropdown dropdown-menu-start py-0" aria-labelledby="dropdownMenuLink">
+                                                <a class="dropdown-item fw-normal rounded-top" href="#" data-bs-toggle="modal" data-bs-target="#editTaskModal"><span class="fas fa-edit"></span>Edit task</a><a class="dropdown-item fw-normal" href="#"><span class="far fa-clone"></span>Copy Task</a><a class="dropdown-item fw-normal" href="#"><span class="far fa-star"></span> Add to favorites</a>
+                                                <div role="separator" class="dropdown-divider my-0"></div>
+                                                <a class="dropdown-item fw-normal text-danger rounded-bottom" href="#"><span class="fas fa-trash-alt"></span>Hapus Laporan</a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </td>
-
-                            <!-- Modal Edit -->
-                            <div class="modal fade" id="edit<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
-                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Edit Data User</h2>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form action="" method="POST" enctype="multipart/form-data">
-                                            <div class="modal-body">
-                                                <input type="hidden" name="id_user" value="<?= $p['id_user'] ?>">
-                                                <div class="mb-3 row">
-                                                    <label for="foto" class="col-sm-2 col-form-label">Foto</label>
-                                                    <div class="col-sm-10 d-flex align-items-center">
-                                                        <div class="me-3">
-                                                            <img class="rounded avatar-xl" src="assets/foto-user/<?= $p['foto'] ?>" alt="Foto User <?php echo $p['nama'] ?>">
-                                                        </div>
-                                                        <div class="">
-                                                            <div class="d-flex justify-content-xl-center ms-xl-3">
-                                                                <div class="d-flex">
-                                                                    <input class="form-control" type="file" id="formFile" name="foto"><br>
-                                                                    <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah foto</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>     
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="nama" class="col-sm-2 col-form-label">Nama</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="nama" name="nama" value="<?php echo $p['nama'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="email" class="col-sm-2 col-form-label">Email</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" id="email" name="email" value="<?php echo $p['email'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="username" class="col-sm-2 col-form-label">Username</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="text" class="form-control" name="username" value="<?php echo $p['username'] ?>" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="password" class="col-sm-2 col-form-label">Password</label>
-                                                    <div class="col-sm-10">
-                                                        <input type="password" class="form-control" name="password" value="">
-                                                        <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah password</span>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3 row">
-                                                    <label for="penerbit" class="col-sm-2 col-form-label">Pilih Level</label>
-                                                    <div class="col-sm-10">
-                                                        <select class="form-select" aria-label="Default select example" name="level" required>
-                                                            <option value="Superadmin" <?php if ($p['level']=="Superadmin") { ?> selected <?php } ?>>Superadmin</option>
-                                                            <option value="Admin" <?php if ($p['level']=="Admin") { ?> selected <?php } ?>>Admin</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                <button type="submit" class="btn btn-secondary" name="update">Ubah Data</button>
-                                            </div>
-                                        </form>
-                                    </div>
+                                <div class="card-body p-0">
+                                    <p>
+                                        <?= $p['keterangan']; ?>.
+                                    </p>
+                                    
                                 </div>
                             </div>
-
-                            <!-- Modal Hapus -->
-                            <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h2 class="h6 modal-title">Formulir Hapus Data User</h2>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            
+                        </div>
+                        <div class="modal fade" id="detail<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                                <div class="modal-content p-lg-3">
+                                    <div class="modal-header align-items-start border-bottom">
+                                        <div class="d-block">
+                                            <h2 class="h5 mb-3"><?= $p['judul_laporan']; ?></h2>
+                                            <div class="d-flex">
+                                                <div class="d-block me-3 me-sm-4">
+                                                    <h5 class="fs-6 fw-bold text-gray-500" id="editTaskModalLabel"><?= $p['kode_laporan']; ?></h5>
+                                                    
+                                                </div>
+                                                
+                                            </div>
                                         </div>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body py-4" id="printableModal">
+                                        <div class="row">
+                                            <div class="col-12 col-lg-12">
+                                                <div class="row mb-4 mb-lg-0">
+                                                    <div class="card card-body border-0 shadow table-wrapper table-responsive" >
+                                                        <table class="table table-hover" >
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="border-gray-200" style="text-align: center;">No</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">Judul Buku</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">Tanggal</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">User</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">Transaksi</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">Keterangan</th>
+                                                                    <th class="border-gray-200" style="text-align: center;">Jumlah</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                    $query_bk = ("  SELECT id_buku, kode_buku, judul_buku, keterangan, tanggal_transaksi, kategori, nama, jumlah 
+                                                                                    FROM (
+                                                                                        SELECT  b.id_buku, b.kode_buku, b.judul_buku, bm.keterangan,
+                                                                                                bm.tanggal AS tanggal_transaksi_asli, 
+                                                                                                DATE_FORMAT(bm.tanggal, '%d-%m-%Y') AS tanggal_transaksi, 
+                                                                                                'Buku Masuk' AS kategori, 
+                                                                                                u.nama, 
+                                                                                                bm.jumlah
+                                                                                        FROM tb_buku b
+                                                                                        LEFT JOIN tb_buku_masuk bm ON b.id_buku = bm.id_buku
+                                                                                        LEFT JOIN user u ON bm.id_user = u.id_user
+                                                                                        WHERE bm.id_buku IS NOT NULL
+                                                                                        
+                                                                                        UNION
+                                                                                        
+                                                                                        SELECT  b.id_buku, b.kode_buku, b.judul_buku, bk.keterangan,
+                                                                                                bk.tanggal AS tanggal_transaksi_asli, 
+                                                                                                DATE_FORMAT(bk.tanggal, '%d-%m-%Y') AS tanggal_transaksi, 
+                                                                                                'Buku Keluar' AS kategori, 
+                                                                                                u.nama, 
+                                                                                                bk.jumlah
+                                                                                        FROM tb_buku b 
+                                                                                        LEFT JOIN tb_buku_keluar bk ON b.id_buku = bk.id_buku
+                                                                                        LEFT JOIN user u ON bk.id_user = u.id_user
+                                                                                        WHERE bk.id_buku IS NOT NULL
+                                                                                    ) AS combined_data
+                                                                                    WHERE 
+                                                                                        DATE_FORMAT(tanggal_transaksi_asli, '%Y-%m') IN (SELECT bulan FROM tb_laporan WHERE id_laporan = '$idb')
+                                                                                    ORDER BY 
+                                                                                        tanggal_transaksi_asli ASC");
+                                                                    $result_bk = mysqli_query($conn, $query_bk);
+                                                                    $no = 1;
+                                                                    while ($bk = mysqli_fetch_array($result_bk)) {
+                                                                        
+                                                                ?>
+                                                                <tr>
+                                                                    <td><?= $no++ ?></td>
+                                                                    <td style="text-align: justify;"><span class="fw-normal"><?= $bk['judul_buku']; ?></span></td>
+                                                                    <td style="text-align: center;"><span class="fw-normal"><?= TanggalIndo($bk['tanggal_transaksi']); ?></span></td>
+                                                                    <td><span class="fw-normal"><?= $bk['nama']; ?></span></td>
+                                                                    <td style="text-align: center;"><span class="fw-bold <?= $bk['kategori'] == 'Buku Masuk' ? 'text-success' : 'text-danger'; ?>"><?= $bk['kategori']; ?></span></td>
+                                                                    <td><span class="fw-normal"><?= $bk['keterangan']; ?></span></td>
+                                                                    <td style="text-align: center;"><span class="fw-normal" style="text-align: left;"><?= $bk['jumlah']; ?></span></td>
+                                                                </tr>
+                                                                <?php } ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer justify-content-start border-top">
                                         <form action="" method="POST">
-                                            <div class="modal-body">
-                                                <p>Nama User : <?php echo $p['nama']?></p>
-                                                <p>Apakah Anda yakin ingin menghapus user ini dari daftar user?</p>
-                                                <input type="hidden" name="id_user" value="<?=$idb;?>">
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
+                                            <input type="hidden" name="id_laporan" value="<?= $p['id_laporan'] ?>">
+                                            <button type="submit" class="btn btn-gray-800 d-inline-flex align-items-center me-2" name="cetak">
+                                                <i class="bi bi-printer-fill text-gray-300 me-2"></i> Cetak Laporan <i class="bi bi-patch-check-fill text-success ms-2"></i>
+                                            </button>
+                                            <div class="col-12 d-grid gap-2 d-sm-none">
+                                                <button type="submit" class="btn btn-gray-800 me-2 text-start" name="cetak" target="_blank">
+                                                    <span class="fas fa-eye me-2"></span>Cetak Laporan<span class="fas fa-check-circle ms-3 text-success"></span>
+                                                </button>
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                             </div>
-                        </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
+                        </div>
+                        <!-- Modal Hapus -->
+                        <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h2 class="h6 modal-title">Formulir Hapus Data Laporan</h2>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="" method="POST">
+                                        <div class="modal-body">
+                                            <p>Judul Laporan : <?php echo $p['judul_laporan']?></p>
+                                            <p>Apakah Anda yakin ingin menghapus daftar laporan ini?</p>
+                                            <input type="hidden" name="id_laporan" value="<?=$idb;?>">
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                            <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Pagination -->
-                <div class="card-footer px-3 border-0 d-flex flex-column flex-lg-row align-items-center justify-content-between">
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination mb-0">
-                            <?php
-                                //hitung jumlah semua data
-                                $sql_jum = "SELECT * FROM user";
-                                if (!empty($katakunci)){
-                                    $sql_jum .= " WHERE nama LIKE '%" . mysqli_real_escape_string($conn, $katakunci) . "%'";
-                                }
-                                $sql_jum .= " ORDER BY nama ASC";
-                                $query_jum = mysqli_query($conn,$sql_jum);
-                                $jum_data = mysqli_num_rows($query_jum);
-                                $jum_halaman = ceil($jum_data/$batas);
-                                
-                                if($jum_halaman==0){
-                                    //tidak ada halaman
-                                } else if($jum_halaman==1){
-                                    echo "<li class='page-item active'><a class='page-link'>1</a></li>";
-                                } else {
-                                    $sebelum = $halaman-1;
-                                    $setelah = $halaman+1;
-                                    if($halaman!=1){
-                                        echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$sebelum'><i class='bi bi-chevron-left'></i></a></li>";
-                                    }
-                                    for($i=1; $i<=$jum_halaman; $i++){
-                                        if ($i > $halaman - 5 and $i < $halaman + 5 ) {
-                                            if($i!=$halaman){
-                                                echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$i'>$i</a></li>";
-                                            } else {
-                                                echo "<li class='page-item active'><a class='page-link'>$i</a></li>";
-                                        }
-                                        }
-                                    }
-                                    if($halaman!=$jum_halaman){
-                                        echo "<li class='page-item'><a class='page-link' href='page_user.php?halaman=$setelah'><i class='bi bi-chevron-right'></i></a></li>";
-                                    }
-                                }
-                            ?>
-                        </ul>
-                    </nav>
+                    </div>
+                    <?php } ?>
                 </div>
+                
             </div>
         </main>
 
         <!-- Script -->
-        <!-- Core -->
+
         <script src="../vendor/@popperjs/core/dist/umd/popper.min.js"></script>
         <script src="../vendor/bootstrap/dist/js/bootstrap.min.js"></script>
 

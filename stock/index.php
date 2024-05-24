@@ -251,6 +251,8 @@
                                             <tr>
                                                 <th class="text-gray-900" scope="row"><?php echo $b['kode_buku'] ?></th>
                                                 <td class="fw-bolder text-gray-500"><?php echo $b['judul_buku'] ?></td>
+                                                <td class="fw-bolder text-gray-500"><?php echo $tanggal_format ?></td>
+                                                <td class="fw-bolder text-gray-500"><?php echo $b['kategori'] ?></td>
                                             </tr>
                                             <?php } ?>
                                         </tbody>
