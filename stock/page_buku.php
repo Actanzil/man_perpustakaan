@@ -331,94 +331,97 @@
                     <h2 class="h4">Daftar Buku</h2>
                     <p class="mb-0">Your web analytics dashboard template.</p>
                 </div>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="#" class="btn btn-sm btn-gray-800 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modal-default">
-                        <i class="bi bi-plus-lg me-2"></i>
-                        Tambah Data
-                    </a>
-                </div>
-                <div class="modal fade" id="modal-default" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
-                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2 class="h6 modal-title">Formulir Tambah Data Buku</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <form action="konfirmasi_tambah_buku.php" method="POST" enctype="multipart/form-data">
-                                <div class="modal-body">
-                                    <div class="mb-3 row">
-                                        <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
-                                        <div class="col-sm-10">
-                                            <input class="form-control" type="file" id="formFile" name="gambar" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="kd_buku" name="kd_buku" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="judul" name="judul" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="penulis" name="penulis" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
-                                        <div class="col-sm-10">
-                                            <select class="form-select" aria-label="Default select example" name="penerbit" required>
-                                                <option selected>Pilih Penerbit</option>
-                                                <option value="Gramedia">Gramedia</option>
-                                                <option value="Togamas">Togamas</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="ukuran" class="col-sm-2 col-form-label">Tahun Terbit</label>
-                                        <div class="col-sm-10">
-                                            <input type="date" class="form-control" id="tahun" name="tahun" required>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
-                                        <div class="col-sm-10">
-                                            <select name="tags[]" id="tags" multiple>
-                                                <?php
-                                                    $sql_tg = " SELECT `id_tag`, `nama_tag` 
-                                                                FROM `tb_tag` 
-                                                                ORDER BY `nama_tag`";
-                                                    $query_tg = mysqli_query($conn, $sql_tg);
-                                                    while($data_tg = mysqli_fetch_row($query_tg)){
-                                                        $id_tag = $data_tg[0];
-                                                        $nama = $data_tg[1];
-                                                ?>
-                                                <option value="<?= $id_tag; ?>"><?= $nama; ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label for="ukuran" class="col-sm-2 col-form-label">Jumlah Persediaan</label>
-                                        <div class="col-sm-10">
-                                            <input type="number" class="form-control" id="stock" name="stock" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" class="btn btn-secondary" value="simpan">Simpan Data</button>
-                                </div>
-                            </form>
-                        </div>
+                <?php if ($_SESSION['level'] == "Superadmin") { ?>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="#" class="btn btn-sm btn-gray-800 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modal-default">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            Tambah Data
+                        </a>
                     </div>
-                </div>
+                    <div class="modal fade" id="modal-default" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
+                        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h2 class="h6 modal-title">Formulir Tambah Data Buku</h2>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form action="konfirmasi_tambah_buku.php" method="POST" enctype="multipart/form-data">
+                                    <div class="modal-body">
+                                        <div class="mb-3 row">
+                                            <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
+                                            <div class="col-sm-10">
+                                                <input class="form-control" type="file" id="formFile" name="gambar" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" id="kd_buku" name="kd_buku" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" id="judul" name="judul" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" id="penulis" name="penulis" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
+                                            <div class="col-sm-10">
+                                                <select class="form-select" aria-label="Default select example" name="penerbit" required>
+                                                    <option selected>Pilih Penerbit</option>
+                                                    <option value="Gramedia">Gramedia</option>
+                                                    <option value="Togamas">Togamas</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="ukuran" class="col-sm-2 col-form-label">Tahun Terbit</label>
+                                            <div class="col-sm-10">
+                                                <input type="date" class="form-control" id="tahun" name="tahun" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
+                                            <div class="col-sm-10">
+                                                <select name="tags[]" id="tags" multiple>
+                                                    <?php
+                                                        $sql_tg = " SELECT `id_tag`, `nama_tag` 
+                                                                    FROM `tb_tag` 
+                                                                    ORDER BY `nama_tag`";
+                                                        $query_tg = mysqli_query($conn, $sql_tg);
+                                                        while($data_tg = mysqli_fetch_row($query_tg)){
+                                                            $id_tag = $data_tg[0];
+                                                            $nama = $data_tg[1];
+                                                    ?>
+                                                    <option value="<?= $id_tag; ?>"><?= $nama; ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row">
+                                            <label for="ukuran" class="col-sm-2 col-form-label">Jumlah Persediaan</label>
+                                            <div class="col-sm-10">
+                                                <input type="number" class="form-control" id="stock" name="stock" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                        <button type="submit" class="btn btn-secondary" value="simpan">Simpan Data</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>    
+                <?php } ?>
+                
             </div>
 
             <!-- Kolom Pencarian -->
@@ -514,7 +517,7 @@
                     $sql .= " GROUP BY b.id_buku";
                     
                     // Mengurutkan data berdasarkan nama dan membatasi data sesuai batasan yang telah ditentukan
-                    $sql .= " ORDER BY b.judul_buku ASC LIMIT $posisi, $batas";
+                    $sql .= " ORDER BY b.kode_buku ASC LIMIT $posisi, $batas";
 
                     $brgs = mysqli_query($conn, $sql);
                     // Hitung jumlah data yang ditampilkan di halaman saat ini
@@ -559,149 +562,169 @@
                                     <span class="fw-normal text-gray"><?= $p['tags'] ?></span>
                                 </div>
                             </div>
-                            <div class="col-10 col-sm-2 col-lg-2 col-xl-2 d-none d-lg-block d-xl-inline-flex align-items-center ms-lg-auto text-right justify-content-end px-md-0">
-                                <div class="dropdown">
-                                    <button class="btn btn-link text-dark dropdown-toggle dropdown-toggle-split m-0 p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg><span class="visually-hidden">Toggle Dropdown</span></button>
-                                    <div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#edit<?= $idb; ?>">
-                                            <svg class="dropdown-icon text-gray-400 me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg> 
-                                            Edit Data
-                                        </a>
-                                        <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>">
-                                            <svg class="dropdown-icon text-danger me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> 
-                                            Hapus Data
-                                        </a>
+                            <?php if ($_SESSION['level'] == "Superadmin") { ?>
+                                <div class="col-10 col-sm-2 col-lg-2 col-xl-2 d-none d-lg-block d-xl-inline-flex align-items-center ms-lg-auto text-right justify-content-end px-md-0">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-dark dropdown-toggle dropdown-toggle-split m-0 p-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><svg class="icon icon-xs" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg><span class="visually-hidden">Toggle Dropdown</span></button>
+                                        <div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
+                                            <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#edit<?= $idb; ?>">
+                                                <svg class="dropdown-icon text-gray-400 me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg> 
+                                                Edit Data
+                                            </a>
+                                            <a class="dropdown-item d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#delete<?= $idb; ?>">
+                                                <svg class="dropdown-icon text-danger me-2" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> 
+                                                Hapus Data
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                                <!-- Modal Edit -->
-                                <div class="modal fade" id="edit<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
-                                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h2 class="h6 modal-title">Formulir Edit Data Buku</h2>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <form action="" method="POST" enctype="multipart/form-data">
-                                                <div class="modal-body">
-                                                    <div class="mb-3 row">
-                                                        <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
-                                                        <div class="col-sm-10 d-flex align-items-center">
-                                                            <div class="me-3">
-                                                                <img class="rounded avatar-xl" src="assets/gambar-buku/<?= $p['gambar'] ?>" alt="Gambar Buku <?php echo $p['judul_buku'] ?>">
-                                                            </div>
-                                                            <div class="">
-                                                                <div class="d-flex justify-content-xl-center ms-xl-3">
-                                                                    <div class="d-flex">
-                                                                        <input class="form-control" type="file" id="formFile" name="gambar"><br>
-                                                                        <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah gambar</span>
-                                                                    </div>
+                                    <!-- Modal Edit -->
+                                    <div class="modal fade" id="edit<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true" >
+                                        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h2 class="h6 modal-title">Formulir Edit Data Buku</h2>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="" method="POST" enctype="multipart/form-data">
+                                                    <div class="modal-body">
+                                                        <div class="mb-3 row">
+                                                            <label for="gambar" class="col-sm-2 col-form-label">Gambar Buku</label>
+                                                            <div class="col-sm-10 d-flex align-items-center">
+                                                                <div class="me-3">
+                                                                    <img class="rounded avatar-xl" src="assets/gambar-buku/<?= $p['gambar'] ?>" alt="Gambar Buku <?php echo $p['judul_buku'] ?>">
                                                                 </div>
-                                                            </div>     
+                                                                <div class="">
+                                                                    <div class="d-flex justify-content-xl-center ms-xl-3">
+                                                                        <div class="d-flex">
+                                                                            <input class="form-control" type="file" id="formFile" name="gambar"><br>
+                                                                            <span class="text-danger" style="font-weight:lighter;font-size:12px">*Jangan diisi jika tidak ingin mengubah gambar</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>     
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
-                                                        <div class="col-sm-10">
-                                                            <input type="text" class="form-control" id="kd_buku" name="kd_buku" value="<?php echo $p['kode_buku'] ?>" required>
+                                                        <div class="mb-3 row">
+                                                            <label for="kd_buku" class="col-sm-2 col-form-label">Kode Buku</label>
+                                                            <div class="col-sm-10">
+                                                                <input type="text" class="form-control" id="kd_buku" name="kd_buku" value="<?php echo $p['kode_buku'] ?>" required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
-                                                        <div class="col-sm-10">
-                                                            <input type="text" class="form-control" id="judul" name="judul" value="<?php echo $p['judul_buku'] ?>" required>
+                                                        <div class="mb-3 row">
+                                                            <label for="judul" class="col-sm-2 col-form-label">Judul Buku</label>
+                                                            <div class="col-sm-10">
+                                                                <input type="text" class="form-control" id="judul" name="judul" value="<?php echo $p['judul_buku'] ?>" required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
-                                                        <div class="col-sm-10">
-                                                            <input type="text" class="form-control" id="penulis" name="penulis" value="<?php echo $p['penulis_buku'] ?>" required>
+                                                        <div class="mb-3 row">
+                                                            <label for="penulis" class="col-sm-2 col-form-label">Penulis Buku</label>
+                                                            <div class="col-sm-10">
+                                                                <input type="text" class="form-control" id="penulis" name="penulis" value="<?php echo $p['penulis_buku'] ?>" required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
-                                                        <div class="col-sm-10">
-                                                            <select class="form-select" aria-label="Default select example" name="penerbit" required>
-                                                                <option value="Gramedia" <?php if ($p['penerbit_buku']=="Gramedia") { ?> selected <?php } ?>>Gramedia</option>
-                                                                <option value="Togamas" <?php if ($p['penerbit_buku']=="Togamas") { ?> selected <?php } ?>>Togamas</option>
-                                                            </select>
+                                                        <div class="mb-3 row">
+                                                            <label for="penerbit" class="col-sm-2 col-form-label">Penerbit Buku</label>
+                                                            <div class="col-sm-10">
+                                                                <select class="form-select" aria-label="Default select example" name="penerbit" required>
+                                                                    <option value="Gramedia" <?php if ($p['penerbit_buku']=="Gramedia") { ?> selected <?php } ?>>Gramedia</option>
+                                                                    <option value="Togamas" <?php if ($p['penerbit_buku']=="Togamas") { ?> selected <?php } ?>>Togamas</option>
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
-                                                        <div class="col-sm-10">
-                                                            <input type="date" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
+                                                        <div class="mb-3 row">
+                                                            <label for="tahun" class="col-sm-2 col-form-label">Tahun Terbit</label>
+                                                            <div class="col-sm-10">
+                                                                <input type="date" class="form-control" id="tahun" name="tahun" value="<?php echo $p['tahun_terbit'] ?>" required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="mb-3 row">
-                                                        <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
-                                                        <div class="col-sm-10">
-                                                            <select name="tags[]" multiple>
-                                                                <?php
-                                                                    // Query untuk mendapatkan detail buku
-                                                                    $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
-                                                                    $query_buku = mysqli_query($conn, $sql_buku);
-                                                                    $p = mysqli_fetch_assoc($query_buku);
-                    
-                                                                    // Query untuk mendapatkan tag yang terkait dengan buku ini
-                                                                    $sql_tags_selected = "SELECT id_tag FROM tb_tag_buku WHERE id_buku = '$idb'";
-                                                                    $query_tags_selected = mysqli_query($conn, $sql_tags_selected);
-                                                                    $selected_tags = [];
-                                                                    while ($row = mysqli_fetch_assoc($query_tags_selected)) {
-                                                                        $selected_tags[] = $row['id_tag'];
-                                                                    }
-                                                                    $sql_tg = "SELECT `id_tag`, `nama_tag` FROM `tb_tag` ORDER BY `nama_tag`";
-                                                                    $query_tg = mysqli_query($conn, $sql_tg);
-                                                                    while($data_tg = mysqli_fetch_row($query_tg)){
-                                                                        $id_tag = $data_tg[0];
-                                                                        $nama = $data_tg[1];
-                                                                        $selected = in_array($id_tag, $selected_tags) ? 'selected' : ''; // Memeriksa apakah tag ini sudah dipilih sebelumnya
-                                                                ?>
-                                                                <option value="<?= $id_tag; ?>" <?= $selected; ?>><?= $nama; ?></option>
-                                                                <?php } ?>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="mb-3 row">
-                                                        <label for="stock" class="col-sm-2 col-form-label">Stock</label>
-                                                        <div class="col-sm-10">
-                                                            <input type="number" class="form-control" id="stock" value="<?php echo $p['stock'] ?>" disabled>
-                                                            <input type="hidden" name="id_buku" value="<?= $idb; ?>">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                    <button type="submit" class="btn btn-secondary" name="update">Ubah Data</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+                                                        
+                                                        <div class="mb-3 row">
+                                                            <label for="tag" class="col-sm-2 col-form-label">Tag Buku</label>
+                                                            <div class="col-sm-10">
+                                                                <div class="row">
+                                                                    <?php
+                                                                        // Query untuk mendapatkan detail buku
+                                                                        $sql_buku = "SELECT * FROM tb_buku WHERE id_buku = '$idb'";
+                                                                        $query_buku = mysqli_query($conn, $sql_buku);
+                                                                        $p = mysqli_fetch_assoc($query_buku);
 
-                                <!-- Modal Hapus -->
-                                <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h2 class="h6 modal-title">Formulir Hapus Data Buku</h2>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        // Query untuk mendapatkan tag yang terkait dengan buku ini
+                                                                        $sql_tags_selected = "SELECT id_tag FROM tb_tag_buku WHERE id_buku = '$idb'";
+                                                                        $query_tags_selected = mysqli_query($conn, $sql_tags_selected);
+                                                                        $selected_tags = [];
+                                                                        while ($row = mysqli_fetch_assoc($query_tags_selected)) {
+                                                                            $selected_tags[] = $row['id_tag'];
+                                                                        }
+
+                                                                        // Query untuk mendapatkan semua tag
+                                                                        $sql_tg = "SELECT `id_tag`, `nama_tag` FROM `tb_tag` ORDER BY `nama_tag`";
+                                                                        $query_tg = mysqli_query($conn, $sql_tg);
+                                                                        $counter = 0;
+                                                                        while ($data_tg = mysqli_fetch_row($query_tg)) {
+                                                                            $id_tag = $data_tg[0];
+                                                                            $nama = $data_tg[1];
+                                                                            $checked = in_array($id_tag, $selected_tags) ? 'checked' : '';
+
+                                                                            if ($counter % 4 === 0 && $counter !== 0) {
+                                                                                echo '</div><div class="row">';
+                                                                            }
+                                                                    ?>
+                                                                    <div class="col-sm-3">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="checkbox" name="tags[]" value="<?= $id_tag; ?>" <?= $checked; ?> id="tag<?= $id_tag; ?>">
+                                                                            <label class="form-check-label" for="tag<?= $id_tag; ?>">
+                                                                                <?= $nama; ?>
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <?php 
+                                                                        $counter++;
+                                                                        } // Tutup while untuk tag
+                                                                    ?>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3 row">
+                                                            <label for="stock" class="col-sm-2 col-form-label">Stock</label>
+                                                            <div class="col-sm-10">
+                                                                <input type="number" class="form-control" id="stock" value="<?php echo $p['stock'] ?>" disabled>
+                                                                <input type="hidden" name="id_buku" value="<?= $idb; ?>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                                        <button type="submit" class="btn btn-secondary" name="update">Ubah Data</button>
+                                                    </div>
+                                                </form>
                                             </div>
-                                            <form action="" method="POST">
-                                                <div class="modal-body">
-                                                    <p>Judul Buku : <?php echo $p['judul_buku']?></p>
-                                                    <p>Apakah Anda yakin ingin menghapus buku ini dari daftar buku?</p>
-                                                    <input type="hidden" name="id_buku" value="<?=$idb;?>">
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal Hapus -->
+                                    <div class="modal fade" id="delete<?= $idb; ?>" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="modal-default" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h2 class="h6 modal-title">Formulir Hapus Data Buku</h2>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
-                                                    <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
-                                                </div>
-                                            </form>
+                                                <form action="" method="POST">
+                                                    <div class="modal-body">
+                                                        <p>Judul Buku : <?php echo $p['judul_buku']?></p>
+                                                        <p>Apakah Anda yakin ingin menghapus buku ini dari daftar buku?</p>
+                                                        <input type="hidden" name="id_buku" value="<?=$idb;?>">
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-link text-gray-600" data-bs-dismiss="modal">Tutup</button>
+                                                        <button type="submit" class="btn btn-secondary" name="hapus">Hapus Data</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            <?php } ?>
                         </div>
                     </div>
                 <?php } ?>
