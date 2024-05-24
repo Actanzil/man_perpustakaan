@@ -1,0 +1,37 @@
+Panduan Penggunaan Sistem
+
+1. User atau Pengguna
+-> User terbagi menjadi 2 role (Superadmin dan Admin)
+--> Role Superadmin memiliki hak akses untuk
+---> Login, Tambah Buku, Edit Buku, Hapus Buku, 
+---> Tambah data Masuk, Edit data Masuk, Hapus data Masuk, Tambah data Keluar, Edit data Keluar, Hapus data Keluar
+---> Tambah data user, Edit data User, Hapus data User
+---> Buat Laporan, Cetak Laporan, Hapus Laporan
+----> User role Superadmin ==> (username = admin, password = admin)
+===================================================================================================================
+--> Role Admin memiliki hak akses untuk :
+---> Login, Tambah data Masuk, Edit data Masuk, Hapus data Masuk, Tambah data Keluar, Edit data Keluar, Hapus data Keluar
+----> User role Admin ==> (username = joseph, password = joseph), (username = ahmad, password = ahmad), (username = kayla, password = kayla)
+----> User role Admin ==> (username = sriyul, password = sriyul), (username = boys, password = boys), (username = alex, password = alex)
+----> User role Admin ==> (username = yanuar, password = yanuar), (username = ivanka, password = ivanka)
+
+2. Data Masuk dan Data Keluar
+-> Pada menu Data Masuk, user dapat melakukan penambahan stock Buku, dengan Kondisi :
+--> Jika menambah data masuk, kemudian Jumlah Masuk ditentukan. Maka, stock Buku akan bertambah sesuai Jumlah Masuk yang telah ditentukan.
+--> Jika daftar masuk telah ditambahkan, kemudian user melakukan update atau edit data. Maka ada 2 kondisi :
+---> Jika Jumlah Masuk ditambahkan, maka stock Buku akan bertambah. Jika Jumlah Masuk dikurangi, maka stock Buku akan berkurang.
+--> Jika daftar masuk di hapus, maka stock Buku akan dikurangi sesuai dengan Jumlah Masuk yang terdaftar.
+===================================================================================================================
+-> Pada menu Data Keluar, user dapat melakukan pengurangan stock Buku, dengan Kondisi :
+--> Jika menambah data keluar, kemudian Jumlah Keluar ditentukan. Maka, stock Buku akan berkurang sesuai Jumlah Keluar yang telah ditentukan.
+--> Jika daftar keluar telah ditambahkan, kemudian user melakukan update atau edit data. Maka ada 2 kondisi :
+---> Jika Jumlah Keluar ditambahkan, maka stock Buku akan berkurang. Jika Jumlah Keluar dikurangi, maka stock Buku akan bertambah.
+--> Jika daftar keluar di hapus, maka stock Buku akan ditambahkan sesuai dengan Jumlah Hapus yang terdaftar.
+
+3. Membuat Laporan
+-> Menu Laporan digunakan untuk melakukan rekap data transaksi (Masuk dan Keluar) sesuai parameter Bulan dan Tahun.
+-> Pada menu Laporan, user dapat melakukan pembuatan Laporan Bulanan, dengan rincian :
+--> User dapat membuat data Laporan dengan membuat perintah berdasarkan Bulan dan Tahun dari data yang akan dilaporkan, Terdapat 2 Kondisi :
+---> Jika Bulan dan Tahun sesuai dengan data yang ada pada database, maka sistem akan menampilkan data berdasarkan parameter Bulan dan Tahun yang telah dimasukkan
+---> Jika Bulan dan Tahun tidak ada dalam database, maka sistem tidak akan menampilkan data tersebut.
+--> User dapat mencetak data Laporan yang telah ditambahkan melalui tombol yang tersedia. Format cetak Laporan adalah PDF.
