@@ -1,6 +1,7 @@
 <?php
     include '../dbconnect.php';
     include 'cek.php';
+    include 'fungsi.php';
 
     $id_user = $_SESSION['id'];
     //get profil
@@ -231,28 +232,28 @@
                                         <tbody>
                                             <?php
                                                 $query_brg = (" SELECT id_buku, kode_buku, judul_buku, tanggal_transaksi, kategori 
-                                                                FROM (  SELECT b.id_buku, b.kode_buku, b.judul_buku, bm.tanggal as tanggal_transaksi, 'Masuk' as kategori
+                                                                FROM (  SELECT b.id_buku, b.kode_buku, b.judul_buku, DATE_FORMAT(bm.tanggal, '%d-%m-%Y') AS tanggal_transaksi, 'Buku Masuk' as kategori
                                                                         FROM tb_buku b
                                                                         LEFT JOIN tb_buku_masuk bm ON b.id_buku = bm.id_buku
                                                                         WHERE bm.id_buku IS NOT NULL
                                                     
                                                                         UNION
                                                     
-                                                                        SELECT b.id_buku, b.kode_buku, b.judul_buku, bk.tanggal as tanggal_transaksi, 'Keluar' as kategori
+                                                                        SELECT b.id_buku, b.kode_buku, b.judul_buku, DATE_FORMAT(bk.tanggal, '%d-%m-%Y') AS tanggal_transaksi, 'Buku Keluar' as kategori
                                                                         FROM tb_buku b
                                                                         LEFT JOIN tb_buku_keluar bk ON b.id_buku = bk.id_buku
                                                                         WHERE bk.id_buku IS NOT NULL
                                                                     ) AS combined_data
-                                                                ORDER BY tanggal_transaksi DESC, id_buku ASC;");
+                                                                ORDER BY tanggal_transaksi DESC, id_buku ASC LIMIT 10;");
                                                 $result_brg = mysqli_query($conn, $query_brg);
                                                 while ($b = mysqli_fetch_array($result_brg)) {
-                                                    $tanggal_format = date("d F Y", strtotime($b['tanggal_transaksi']));
+                                                    
                                                 ?>
                                             <tr>
                                                 <th class="text-gray-900" scope="row"><?php echo $b['kode_buku'] ?></th>
                                                 <td class="fw-bolder text-gray-500"><?php echo $b['judul_buku'] ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $tanggal_format ?></td>
-                                                <td class="fw-bolder text-gray-500"><?php echo $b['kategori'] ?></td>
+                                                <td class="fw-bolder text-gray-500"><?php echo TanggalIndo($b['tanggal_transaksi']); ?></td>
+                                                <td class="fw-bolder <?= $b['kategori'] == 'Buku Masuk' ? 'text-success' : 'text-danger'; ?>"><?= $b['kategori']; ?></td>
                                             </tr>
                                             <?php } ?>
                                         </tbody>

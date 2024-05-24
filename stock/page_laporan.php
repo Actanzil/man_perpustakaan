@@ -395,7 +395,6 @@
                         // Inisialisasi katakunci pencarian
                         $katakunci = isset($_GET['katakunci']) ? $_GET['katakunci'] : '';
                         
-                        // Query untuk menampilkan semua data pada tabel user kecuali user yang sedang login
                         $sql = "SELECT * FROM tb_laporan";
                         
                         // Logika untuk pencarian
